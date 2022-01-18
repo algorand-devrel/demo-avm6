@@ -34,9 +34,9 @@ def call():
 @Subroutine(TealType.bytes)
 def echo():
     return Concat(
-        Bytes("In app id: "),
+        Bytes("In app id "),
         itoa(Txn.application_id()),
-        Bytes(" Called by: "),
+        Bytes(" which was called by app id "),
         itoa(caller()),
     )
 

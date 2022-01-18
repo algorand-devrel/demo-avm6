@@ -44,7 +44,8 @@ def demo():
     atc.add_method_call(first_app_id, get_method(c, "call"), addr, sp, signer, method_args=[second_app_id])
     result = atc.execute(client, 4)
 
-    print("Result of inner app call: {}".format(result.abi_results[0].return_value))
+    print("""Result of inner app call: 
+    {}""".format(result.abi_results[0].return_value))
 
 
 def create_app(addr, pk):
