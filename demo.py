@@ -43,7 +43,8 @@ def demo():
     atc = AtomicTransactionComposer()
     atc.add_method_call(first_app_id, get_method(c, "call"), addr, sp, signer, method_args=[second_app_id])
     result = atc.execute(client, 4)
-    print(result.abi_results[0].__dict__)
+
+    print("Result of inner app call: {}".format(result.abi_results[0].return_value))
 
 
 def create_app(addr, pk):
