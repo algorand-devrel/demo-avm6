@@ -4,33 +4,46 @@ from pyteal import *
 from pytealutils.inline import InlineAssembly
 from pytealutils.strings import itoa, rest
 
+# This may be provided as a constant in pyteal, for now just hardcode
 prefix = Bytes("base16", "151f7c75")
 
+# These are the 2 methods we want to expose, calling MethodSignature creates the 4 byte method selector
+# as described in arc-0004
 call_selector = MethodSignature("call(application)string")
 echo_selector = MethodSignature("echo(uint64)string")
 
 
+# Util until this method is available in pyteal
 def caller():
     return InlineAssembly("global CallerApplicationID", type=TealType.uint64)
     
 
+# This method is called from off chain, it dispatches a call to the first argument treated as an application id
 @Subroutine(TealType.bytes)
 def call():
+
+    # Get the reference into the applications array
     app_ref = Btoi(Txn.application_args[1])
+
 
     return Seq(
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.ApplicationCall,
+            # access the actual id specified by the 2nd app arg
             TxnField.application_id: Txn.applications[app_ref],
+            # Pass the selector as the first arg to trigger the `echo` method
             TxnField.application_args: [echo_selector],
+            # Set fee to 0 so caller has to cover it
             TxnField.fee: Int(0)
         }),
         InnerTxnBuilder.Submit(),
+        # Get the first log from the last inner transaction
         rest(InnerTxn.logs[0], Int(6)) # Trim off return (4 bytes) Trim off string length (2 bytes)
     )
 
 
+# This is called from the other application, just echos some stats 
 @Subroutine(TealType.bytes)
 def echo():
     return Concat(
@@ -42,17 +55,19 @@ def echo():
 
 
 
+# Util to add length to string to make it abi compliant, will have better interface in pyteal
 @Subroutine(TealType.bytes)
 def string_encode(str: TealType.bytes):
     return Concat(Extract(Itob(Len(str)), Int(6), Int(2)), str)
 
+# Util to log bytes with return prefix
 @Subroutine(TealType.none)
 def ret_log(value: TealType.bytes):
     return Log(Concat(prefix, string_encode(value)))
 
 
 def approval():
-
+    # Define our abi handlers, route based on method selector defined above
     handlers= [
         [
             Txn.application_args[0] == call_selector,
@@ -65,6 +80,7 @@ def approval():
 
     return Cond(
         [Txn.application_id() == Int(0), Approve()],
+        # Add abi handlers to main router conditional
         *handlers,
         [Txn.on_completion() == OnComplete.DeleteApplication, Reject()],
         [Txn.on_completion() == OnComplete.UpdateApplication, Reject()],

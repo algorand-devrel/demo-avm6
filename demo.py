@@ -23,9 +23,7 @@ def demo():
     addr, pk = get_accounts()[0]
     print("Using {}".format(addr))
 
-
-    signer = AccountTransactionSigner(pk)
-
+    # Read in the json contract description and create a Contract object
     c = get_contract_from_json() 
 
     # Create app
@@ -36,14 +34,20 @@ def demo():
     second_app_id = create_app(addr, pk)
     print("Created App with id: {}".format(second_app_id))
 
-    sp = client.suggested_params()
-    sp.fee = sp.min_fee*3
-    sp.min_fee = sp.min_fee*3
+    signer = AccountTransactionSigner(pk)
 
+    # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
+    sp = client.suggested_params()
+    sp.fee = sp.min_fee*2
+
+    # Create atc to handle method calling for us
     atc = AtomicTransactionComposer()
+    # add a method call to "call" method, pass the second app id so we can dispatch a call
     atc.add_method_call(first_app_id, get_method(c, "call"), addr, sp, signer, method_args=[second_app_id])
+    # run the transaction and wait for the restuls
     result = atc.execute(client, 4)
 
+    #Print out the result
     print("""Result of inner app call: 
     {}""".format(result.abi_results[0].return_value))
 
