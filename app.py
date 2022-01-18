@@ -27,7 +27,7 @@ def call():
             TxnField.fee: Int(0)
         }),
         InnerTxnBuilder.Submit(),
-        rest(InnerTxn.logs[0], Int(6))
+        rest(InnerTxn.logs[0], Int(6)) # Trim off return (4 bytes) Trim off string length (2 bytes)
     )
 
 
