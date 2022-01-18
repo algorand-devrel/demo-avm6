@@ -1,15 +1,21 @@
 from algosdk import *
+from algosdk.atomic_transaction_composer import *
+from algosdk.abi import *
 from algosdk.v2client import algod
-from algosdk.v2client.models import DryrunSource, DryrunRequest
 from algosdk.future.transaction import *
 from sandbox import get_accounts
 import base64
 import os
 
-token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-url = "http://localhost:4001"
+from app import get_approval, get_clear
 
-client = algod.AlgodClient(token, url)
+client = algod.AlgodClient("a"*64, "http://localhost:4001")
+
+def get_method(c: Contract, name: str) -> Method:
+    for m in c.methods:
+        if m.name == name:
+            return m
+    raise Exception("No method with the name {}".format(name))
 
 
 def demo():
@@ -17,84 +23,39 @@ def demo():
     addr, pk = get_accounts()[0]
     print("Using {}".format(addr))
 
+
+    signer = AccountTransactionSigner(pk)
+
+    c = get_contract_from_json() 
+
     # Create app
-    app_id = create_app(addr, pk)
-    print("Created App with id: {}".format(app_id))
+    first_app_id = create_app(addr, pk)
+    print("Created App with id: {}".format(first_app_id))
+
+    # Create app
+    second_app_id = create_app(addr, pk)
+    print("Created App with id: {}".format(second_app_id))
 
     sp = client.suggested_params()
-    txn_group = [
-        get_app_call(addr, sp, app_id, []),
-    ]
+    sp.fee = sp.min_fee*3
+    sp.min_fee = sp.min_fee*3
 
-    signed_group = [txn.sign(pk) for txn in txn_group]
-
-    write_dryrun(signed_group, "dryrun", app_id, [addr])
-
-    txid = client.send_transactions(signed_group)
-    print("Sending grouped transaction: {}".format(txid))
-
-    result = wait_for_confirmation(client, txid, 4)
-    print("Result confirmed in round: {}".format(result["confirmed-round"]))
-    print("Logs: ")
-    for log in result["logs"]:
-        print_log(log)
-
-
-def write_dryrun(signed_txn, name, app_id, addrs):
-    path = os.path.dirname(os.path.abspath(__file__))
-    # Read in approval teal source
-    app_src = open(os.path.join(path, "approval.teal")).read()
-
-    # Add source
-    sources = [
-        DryrunSource(app_index=app_id, field_name="approv", source=app_src),
-    ]
-
-    # Get account info
-    accounts = [client.account_info(a) for a in addrs]
-    # Get app info
-    app = client.application_info(app_id)
-
-    # Create request
-    drr = DryrunRequest(txns=signed_txn, sources=sources, apps=[app], accounts=accounts)
-
-    file_path = os.path.join(path, "{}.msgp".format(name))
-    data = encoding.msgpack_encode(drr)
-    with open(file_path, "wb") as f:
-        f.write(base64.b64decode(data))
-
-    print("Created Dryrun file at {}".format(file_path))
-
-
-def print_log(log):
-    strlog = base64.b64decode(log).decode("UTF-8")
-    print("\t{}".format(strlog))
-
-
-def get_app_call(addr, sp, app_id, args):
-    return ApplicationCallTxn(
-        addr,
-        sp,
-        app_id,
-        OnComplete.NoOpOC,
-        app_args=args,
-    )
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(first_app_id, get_method(c, "call"), addr, sp, signer, method_args=[second_app_id])
+    result = atc.execute(client, 4)
+    print(result.abi_results[0].__dict__)
 
 
 def create_app(addr, pk):
     # Get suggested params from network
     sp = client.suggested_params()
 
-    path = os.path.dirname(os.path.abspath(__file__))
-
     # Read in approval teal source && compile
-    approval = open(os.path.join(path, "approval.teal")).read()
-    app_result = client.compile(approval)
+    app_result = client.compile(get_approval())
     app_bytes = base64.b64decode(app_result["result"])
 
     # Read in clear teal source && compile
-    clear = open(os.path.join(path, "clear.teal")).read()
-    clear_result = client.compile(clear)
+    clear_result = client.compile(get_clear())
     clear_bytes = base64.b64decode(clear_result["result"])
 
     # We dont need no stinkin storage
@@ -116,6 +77,12 @@ def create_app(addr, pk):
 
     return result["application-index"]
 
+def get_contract_from_json():
+    with open("contract.json") as f:
+        js = f.read()
+
+    return Contract.from_json(js)
 
 if __name__ == "__main__":
     demo()
+

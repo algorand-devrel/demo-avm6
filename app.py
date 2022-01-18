@@ -3,7 +3,7 @@ import os
 from pyteal import *
 from pytealutils.inline import InlineAssembly
 
-prefix = Bytes("")
+prefix = Bytes("151f7c75")
 
 call_selector = MethodSignature("call(application)string")
 echo_selector = MethodSignature("echo(uint64)string")
@@ -13,7 +13,7 @@ def caller():
     return InlineAssembly("global CallerApplicationID", type=TealType.uint64)
     
 
-@Subroutine(TealType.uint64)
+@Subroutine(TealType.bytes)
 def call():
     app_ref = Btoi(Txn.application_args[1])
 
@@ -22,13 +22,15 @@ def call():
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.ApplicationCall,
             TxnField.application_id: Txn.applications[app_ref],
-            TxnField.application_args: [echo_selector]
+            TxnField.application_args: [echo_selector],
+            TxnField.fee: Int(0)
         }),
         InnerTxnBuilder.Submit(),
-        Txn.logs[0]
+        Bytes("tmp")
     )
 
 
+@Subroutine(TealType.bytes)
 def echo():
     return Concat(
         Bytes("In app id: "),
@@ -39,9 +41,9 @@ def echo():
 
 
 
-@Subroutine(TealType.uint64)
+@Subroutine(TealType.none)
 def ret_log(value: TealType.bytes):
-    return Seq(Log(Concat(prefix, value)), Int(1))
+    return Log(Concat(prefix, value))
 
 
 def approval():
@@ -49,16 +51,16 @@ def approval():
     handlers= [
         [
             Txn.application_args[0] == call_selector,
-            ret_log(call()),
+            Return(Seq(ret_log(call()), Int(1))),
         ],[
             Txn.application_args[0] == echo_selector,
-            ret_log(echo()),
+            Return(Seq(ret_log(echo()), Int(1))),
         ]
     ]
 
     return Cond(
-        *handlers,
         [Txn.application_id() == Int(0), Approve()],
+        *handlers,
         [Txn.on_completion() == OnComplete.DeleteApplication, Reject()],
         [Txn.on_completion() == OnComplete.UpdateApplication, Reject()],
         [Txn.on_completion() == OnComplete.CloseOut, Approve()],
