@@ -9,7 +9,8 @@ prefix = Bytes("base16", "151f7c75")
 
 fund_selector = MethodSignature("fund()void")
 
-# This method is called from off chain, it dispatches a call to the first argument treated as an application id
+# This method is called by an account that wishes to fund another app address
+# it ensures the group transaction is structured properly then pays the app address the same amount it was sent in the payment
 @Subroutine(TealType.none)
 def fund():
     app_create, pay, pay_proxy = Gtxn[0], Gtxn[1], Gtxn[2]
@@ -29,11 +30,13 @@ def fund():
         pay_proxy.application_id() == Global.current_application_id()
     )
 
+    # Compute the newly created app address from the app id
     created_addr = Sha512_256(Concat(Bytes("appID"), Itob(app_create.created_application_id())))
 
     return Seq(
         Assert(well_formed_fund),
         InnerTxnBuilder.Begin(),
+        # Send pay transaction from trampoline app to newly created application
         InnerTxnBuilder.SetFields({
             TxnField.type_enum: TxnType.Payment,
             TxnField.amount: pay.amount(),
