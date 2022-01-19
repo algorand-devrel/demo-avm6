@@ -14,8 +14,7 @@ echo_selector = MethodSignature("echo(uint64)string")
 
 
 # Util until this method is available in pyteal
-def caller():
-    return InlineAssembly("global CallerApplicationID", type=TealType.uint64)
+AppCaller = InlineAssembly("global CallerApplicationID", type=TealType.uint64)
     
 
 # This method is called from off chain, it dispatches a call to the first argument treated as an application id
@@ -50,7 +49,7 @@ def echo():
         Bytes("In app id "),
         itoa(Txn.application_id()),
         Bytes(" which was called by app id "),
-        itoa(caller()),
+        itoa(AppCaller),
     )
 
 
@@ -80,12 +79,12 @@ def approval():
 
     return Cond(
         [Txn.application_id() == Int(0), Approve()],
-        # Add abi handlers to main router conditional
-        *handlers,
-        [Txn.on_completion() == OnComplete.DeleteApplication, Reject()],
-        [Txn.on_completion() == OnComplete.UpdateApplication, Reject()],
+        [Txn.on_completion() == OnComplete.DeleteApplication, Return(Txn.sender() == Global.creator_address())],
+        [Txn.on_completion() == OnComplete.UpdateApplication, Return(Txn.sender() == Global.creator_address())],
         [Txn.on_completion() == OnComplete.CloseOut, Approve()],
         [Txn.on_completion() == OnComplete.OptIn, Approve()],
+        # Add abi handlers to main router conditional
+        *handlers,
     )
 
 
