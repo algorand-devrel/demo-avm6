@@ -1,0 +1,22 @@
+{
+    "name":"demo-ops",
+    "networks":{
+        "default":{ 
+            "appID": 1
+        }
+    },
+    "methods":[
+        {
+            "name":"acct_param",
+            "desc":"Get account parameters",
+            "args":[{"type": "account"}],
+            "returns": {"type":"string"}
+        },
+        {
+            "name":"pad",
+            "desc":"noop, just pad the budget",
+            "args":[],
+            "returns": {"type":"void"}
+        }
+    ]
+}
