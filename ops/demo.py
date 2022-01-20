@@ -41,10 +41,8 @@ def demo():
         atc.add_method_call(
             app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr]
         )
-        # Somehow this is expensive?
-        # atc.add_method_call(app_id, get_method(c, "pad"), addr, sp, signer)
 
-        result = atc.dryrun_execute(client)
+        result = atc.dryrun(client)
 
         for i, res in enumerate(result.abi_results):
             print(
