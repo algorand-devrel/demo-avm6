@@ -13,6 +13,12 @@
             "returns": {"type":"string"}
         },
         {
+            "name":"bsqrt",
+            "desc":"Do a square root on a thicc number",
+            "args":[{"type": "uint256"}],
+            "returns": {"type":"uint256"}
+        },
+        {
             "name":"pad",
             "desc":"noop, just pad the budget",
             "args":[],

@@ -37,28 +37,21 @@ def demo():
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
         # add a method call to "call" method, pass the second app id so we can dispatch a call
-        atc.add_method_call(app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr])
+        #atc.add_method_call(app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr])
+        atc.add_method_call(app_id, get_method(c, "bsqrt"), addr, sp, signer, method_args=[int(1e6)**2])
         # Somehow this is expensive?
         atc.add_method_call(app_id, get_method(c, "pad"), addr, sp, signer)
         # run the transaction and wait for the restuls
         #result = atc.execute(client, 4)
 
-        print(atc.gather_signatures())
         txns = atc.gather_signatures()
-
-        print(txns)
-
         drr = create_dryrun(client, txns)
-
         result = client.dryrun(drr)
 
         logs, cost, stack = get_stats_from_dryrun(result)
-
         print("cost {}".format(cost))
         print("stack {}".format(stack))
-        #Print out the result
         print("""Result of inner app call: {}""".format(logs))
-
     finally:
         delete_app(app_id, addr, pk)
 

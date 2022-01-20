@@ -6,10 +6,11 @@ from pytealutils.strings import itoa
 prefix = Bytes("base16", "151f7c75")
 
 acct_param_selector = MethodSignature("acct_param(account)string")
+bsqrt_selector = MethodSignature("bsqrt(uint256)uint256")
 budget_pad_selector = MethodSignature("pad()void")
 
 @Subroutine(TealType.none)
-def doit():
+def gtxns():
 
     # gitxn t f	        : field F of the Tth transaction in the last inner group submitted
     # gitxna t f i      : Ith value of the array field F from the Tth transaction in the last inner group submitted
@@ -20,29 +21,29 @@ def doit():
 
 @Subroutine(TealType.none)
 def acct_param():
-    # acct_params_get   : get AcctBalance, AcctMinBalance, AcctAuthAddr for a given account
     acct_ref = Btoi(Txn.application_args[1])
-    return ret_log(
-        Seq(
-            aa := AccountParam.authAddr(acct_ref),
-            mb := AccountParam.minBalance(acct_ref),
-            b := AccountParam.balance(acct_ref),
-            Concat(
-                Bytes("Auth addr: '"),
-                If(aa.hasValue() , aa.value(), Bytes("<None>")),
-                Bytes("', Min balance: "),
-                Itob(If(mb.hasValue(), mb.value(), Int(0))),
-                Bytes(", Balance: "),
-                Itob(If(b.hasValue(), b.value(), Int(0))),
-            )
-        )
-    )
+    return Seq() 
+   # return ret_log(
+   #     Seq(
+   #         aa := AccountParam.authAddr(acct_ref),
+   #         mb := AccountParam.minBalance(acct_ref),
+   #         b := AccountParam.balance(acct_ref),
+   #         Concat(
+   #             Bytes("Auth addr: '"),
+   #             If(aa.hasValue() , aa.value(), Bytes("<None>")),
+   #             Bytes("', Min balance: "),
+   #             Itob(If(mb.hasValue(), mb.value(), Int(0))),
+   #             Bytes(", Balance: "),
+   #             Itob(If(b.hasValue(), b.value(), Int(0))),
+   #         )
+   #     )
+   # )
 
-#@Subroutine(TealType.none)
-#def bsqrt():
-#    # bsqrt             : The largest integer I such that I^2 <= A. A and I are interpreted as big-endian unsigned integers
-#
-#    pass
+@Subroutine(TealType.none)
+def bsqrt():
+    # Leave it as bytes
+    big_int = Txn.application_args[1]
+    return ret_log(BytesSqrt(big_int))
 
 # Util to add length to string to make it abi compliant, will have better interface in pyteal
 @Subroutine(TealType.bytes)
@@ -62,6 +63,10 @@ def approval():
         [
             Txn.application_args[0] == acct_param_selector,
             Return(Seq(acct_param(), Int(1))),
+        ],
+        [
+            Txn.application_args[0] == bsqrt_selector,
+            Return(Seq(bsqrt(), Int(1))),
         ],
         [
             Txn.application_args[0] == budget_pad_selector,
