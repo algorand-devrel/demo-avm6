@@ -24,16 +24,16 @@ def acct_param():
     acct_ref = Btoi(Txn.application_args[1])
     return ret_log(
         Seq(
-            aa := AcctParam.authAddr(acct_ref),
-            mb := AcctParam.minBalance(acct_ref),
-            b := AcctParam.balance(acct_ref),
+            aa := AccountParam.authAddr(acct_ref),
+            mb := AccountParam.minBalance(acct_ref),
+            b := AccountParam.balance(acct_ref),
             Concat(
                 Bytes("Auth addr: '"),
                 If(aa.hasValue() , aa.value(), Bytes("<None>")),
                 Bytes("', Min balance: "),
-                itoa(If(mb.hasValue(), mb.value(), Int(0))),
+                Itob(If(mb.hasValue(), mb.value(), Int(0))),
                 Bytes(", Balance: "),
-                itoa(If(b.hasValue(), b.value(), Int(0))),
+                Itob(If(b.hasValue(), b.value(), Int(0))),
             )
         )
     )
