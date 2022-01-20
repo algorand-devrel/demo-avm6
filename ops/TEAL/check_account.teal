@@ -1,0 +1,84 @@
+#pragma version 6
+
+txn ApplicationID
+bz handle_setup
+
+// Typical "handler" routine. (Note: This doesn't conform to ARC-0004)
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+txn OnCompletion
+int OptIn
+==
+bnz handle_optin
+
+txn OnCompletion
+int UpdateApplication
+==
+txn OnCompletion
+int DeleteApplication
+==
+||
+bnz handle_update_or_delete
+
+err
+
+// Just create a new app, no questions asked.
+handle_setup:
+	int 1
+	return
+
+handle_noop:
+	int 0
+	int 0
+	app_opted_in
+	return
+
+// Confirm the user holds at least 10 Algo after subtracting their min balance.
+handle_optin:
+
+	// Get the current Algo balance of the sender.
+	int 0
+	acct_params_get AcctBalance
+	assert
+
+	// Get the minimum balance of the sender.
+	int 0
+	acct_params_get AcctMinBalance
+	assert
+
+	// Subtract the sender minimum balance from their full balance, then check
+	// it's greater than 10.000000 Algo.
+	-
+	int 10000000
+	>
+	assert
+
+	int 1
+	return
+
+// Only allow updating from the creator address if it has not been rekeyed.
+handle_update_or_delete:
+
+	// Make sure the sender is actually the creator of the application.
+	txn Sender
+	global CreatorAddress
+	==
+	assert
+
+	// Get the current sender's authoratative address. If it's not set then a
+	// ZeroAddress is returned.
+	int 0
+	acct_params_get AcctAuthAddr
+	assert
+
+	// Compare the returned address with the ZeroAddress.
+	global ZeroAddress
+	==
+	assert
+
+	int 1
+	return
+
