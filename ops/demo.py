@@ -8,7 +8,8 @@ import base64
 
 from app import get_approval, get_clear
 
-client = algod.AlgodClient("a"*64, "http://localhost:4001")
+client = algod.AlgodClient("a" * 64, "http://localhost:4001")
+
 
 def get_method(c: Contract, name: str) -> Method:
     for m in c.methods:
@@ -23,7 +24,7 @@ def demo():
     print("Using {}".format(addr))
 
     # Read in the json contract description and create a Contract object
-    c = get_contract_from_json() 
+    c = get_contract_from_json()
 
     try:
         # Create app
@@ -37,31 +38,23 @@ def demo():
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
         # add a method call to "call" method, pass the second app id so we can dispatch a call
-        atc.add_method_call(app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr])
+        atc.add_method_call(
+            app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr]
+        )
         # Somehow this is expensive?
-        atc.add_method_call(app_id, get_method(c, "pad"), addr, sp, signer)
-        # run the transaction and wait for the restuls
-        #result = atc.execute(client, 4)
+        # atc.add_method_call(app_id, get_method(c, "pad"), addr, sp, signer)
 
-        print(atc.gather_signatures())
-        txns = atc.gather_signatures()
+        result = atc.dryrun_execute(client)
 
-        print(txns)
-
-        drr = create_dryrun(client, txns)
-
-        result = client.dryrun(drr)
-
-        logs, cost, stack = get_stats_from_dryrun(result)
-
-        print("cost {}".format(cost))
-        print("stack {}".format(stack))
-        #Print out the result
-        print("""Result of inner app call: {}""".format(logs))
+        for i, res in enumerate(result.abi_results):
+            print(
+                "Result of '{}': {} (cost {})".format(
+                    atc.method_dict[i].name, res.return_value, res.cost
+                )
+            )
 
     finally:
         delete_app(app_id, addr, pk)
-
 
 
 def raise_rejected(txn):
@@ -83,18 +76,14 @@ def get_stats_from_dryrun(dryrun_result):
     return logs, cost, trace_len
 
 
-
-
-
-
 def delete_app(app_id, addr, pk):
     # Get suggested params from network
     sp = client.suggested_params()
 
     # Create the transaction
-    txn = ApplicationDeleteTxn( addr, sp, app_id )
+    txn = ApplicationDeleteTxn(addr, sp, app_id)
 
-    #sign it
+    # sign it
     signed = txn.sign(pk)
 
     # Ship it
@@ -135,12 +124,13 @@ def create_app(addr, pk):
 
     return result["application-index"]
 
+
 def get_contract_from_json():
     with open("contract.json") as f:
         js = f.read()
 
     return Contract.from_json(js)
 
+
 if __name__ == "__main__":
     demo()
-

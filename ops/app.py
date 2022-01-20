@@ -8,6 +8,7 @@ prefix = Bytes("base16", "151f7c75")
 acct_param_selector = MethodSignature("acct_param(account)string")
 budget_pad_selector = MethodSignature("pad()void")
 
+
 @Subroutine(TealType.none)
 def doit():
 
@@ -29,17 +30,18 @@ def acct_param():
             b := AccountParam.balance(acct_ref),
             Concat(
                 Bytes("Auth addr: '"),
-                If(aa.hasValue() , aa.value(), Bytes("<None>")),
+                If(aa.hasValue(), aa.value(), Bytes("<None>")),
                 Bytes("', Min balance: "),
-                Itob(If(mb.hasValue(), mb.value(), Int(0))),
+                itoa(If(mb.hasValue(), mb.value() / Int(1000000), Int(0))),
                 Bytes(", Balance: "),
-                Itob(If(b.hasValue(), b.value(), Int(0))),
-            )
+                itoa(If(b.hasValue(), b.value() / Int(1000000), Int(0))),
+            ),
         )
     )
 
-#@Subroutine(TealType.none)
-#def bsqrt():
+
+# @Subroutine(TealType.none)
+# def bsqrt():
 #    # bsqrt             : The largest integer I such that I^2 <= A. A and I are interpreted as big-endian unsigned integers
 #
 #    pass
@@ -49,16 +51,16 @@ def acct_param():
 def string_encode(str: TealType.bytes):
     return Concat(Extract(Itob(Len(str)), Int(6), Int(2)), str)
 
+
 # Util to log bytes with return prefix
 @Subroutine(TealType.none)
 def ret_log(value: TealType.bytes):
     return Log(Concat(prefix, string_encode(value)))
 
 
-
 def approval():
     # Define our abi handlers, route based on method selector defined above
-    handlers= [
+    handlers = [
         [
             Txn.application_args[0] == acct_param_selector,
             Return(Seq(acct_param(), Int(1))),
@@ -66,13 +68,19 @@ def approval():
         [
             Txn.application_args[0] == budget_pad_selector,
             Approve(),
-        ]
+        ],
     ]
 
     return Cond(
         [Txn.application_id() == Int(0), Approve()],
-        [Txn.on_completion() == OnComplete.DeleteApplication, Return(Txn.sender() == Global.creator_address())],
-        [Txn.on_completion() == OnComplete.UpdateApplication, Return(Txn.sender() == Global.creator_address())],
+        [
+            Txn.on_completion() == OnComplete.DeleteApplication,
+            Return(Txn.sender() == Global.creator_address()),
+        ],
+        [
+            Txn.on_completion() == OnComplete.UpdateApplication,
+            Return(Txn.sender() == Global.creator_address()),
+        ],
         [Txn.on_completion() == OnComplete.CloseOut, Approve()],
         [Txn.on_completion() == OnComplete.OptIn, Approve()],
         *handlers,
