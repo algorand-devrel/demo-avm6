@@ -14,9 +14,15 @@
         },
         {
             "name":"bsqrt",
-            "desc":"Do a square root on a thicc number",
-            "args":[{"type": "uint256"}],
-            "returns": {"type":"uint256"}
+            "desc":"Do a square root on a byte encoded number",
+            "args":[{"type": "uint64"}],
+            "returns": {"type":"uint64"}
+        },
+        {
+            "name":"gitxn",
+            "desc":"send 2 payment transactions with accounts and amounts specified, return the sum of the amount sent",
+            "args":[{"type": "account"}, {"type":"uint64"}, {"type": "account"}, {"type":"uint64"}],
+            "returns": {"type":"uint64"}
         },
         {
             "name":"pad",
