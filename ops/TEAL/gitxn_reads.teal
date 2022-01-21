@@ -1,0 +1,167 @@
+#pragma version 6
+
+txn ApplicationID
+bz handle_setup
+
+// Typical "handler" routine. (Note: This doesn't conform to ARC-0004)
+txn OnCompletion
+int UpdateApplication
+==
+txn OnCompletion
+int DeleteApplication
+==
+||
+bnz handle_update_or_delete
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+err
+
+// Just create a new app, no questions asked.
+handle_setup:
+	int 1
+	return
+
+// Only allow updating from the creator address if it has not been rekeyed.
+handle_update_or_delete:
+
+	// Make sure the sender is actually the creator of the application.
+	txn Sender
+	global CreatorAddress
+	==
+	return
+
+// When called 2 additional accounts and an application ID must be provided.
+// First the two accounts will be sent 3 payment transactions each in two
+// separate group transactions.
+// Then an application call will be made to the given application ID, where the
+// original sender and the two additional accounts are passed as accounts.
+handle_noop:
+	// Two Accounts must be provided.
+	int 2
+	txn NumAccounts
+	==
+	assert
+
+	// An Application ID must be provided.
+	int 1
+	txn NumApplications
+	==
+	assert
+
+	// Group 1
+	// 3 payments to the first account.
+	itxn_begin
+	int pay
+	itxn_field TypeEnum
+	txn Accounts 1
+	itxn_field Receiver
+	int 1
+	itxn_field Amount
+	byte "Test"
+	itxn_field Note
+
+	itxn_next
+	int pay
+	itxn_field TypeEnum
+	txn Accounts 1
+	itxn_field Receiver
+	int 2
+	itxn_field Amount
+
+	itxn_next
+	int pay
+	itxn_field TypeEnum
+	txn Accounts 1
+	itxn_field Receiver
+	int 3
+	itxn_field Amount
+
+	itxn_submit
+
+	// Sum the amounts of all three transactions in the last group.
+	gitxn 0 Amount
+	gitxn 1 Amount
+	+
+	gitxn 2 Amount
+	+
+
+	// Group 2
+	// 3 more payments, this time to the second account.
+	itxn_begin
+	int pay
+	itxn_field TypeEnum
+	txn Accounts 2
+	itxn_field Receiver
+	int 4
+	itxn_field Amount
+
+	itxn_next
+	int pay
+	itxn_field TypeEnum
+	txn Accounts 2
+	itxn_field Receiver
+	int 5
+	itxn_field Amount
+
+	itxn_next
+	int pay
+	itxn_field TypeEnum
+	txn Accounts 2
+	itxn_field Receiver
+	int 6
+	itxn_field Amount
+
+	itxn_submit
+
+	// Add the amounts of each of these transactions from the last group to our
+	// existing sum total.
+	gitxn 0 Amount
+	+
+	gitxn 1 Amount
+	+
+	gitxn 2 Amount
+	+
+
+	// Only continue if we sent a total of 21 microAlgos.
+	int 21
+	==
+	assert
+
+	// Group 3
+	// Application call to the provided application ID, passing in 3 accounts.
+	// The original sender, plus the two provided accounts.
+	itxn_begin
+	int appl
+	itxn_field TypeEnum
+	txn Applications 1
+	itxn_field ApplicationID
+	int NoOp
+	itxn_field OnCompletion
+	txn Accounts 0
+	itxn_field Accounts
+	txn Accounts 1
+	itxn_field Accounts
+	txn Accounts 2
+	itxn_field Accounts
+	itxn_submit
+
+	// Index 0 will always be the sender, in this case it's the application.
+	gitxna 0 Accounts 0
+	global CurrentApplicationAddress
+	==
+	assert
+
+	// Redundant check since we know what was provided, but confirm the address
+	// in the index 1 of the last transaction group was the original sender.
+	gitxna 0 Accounts 1
+	txn Sender
+	==
+	assert
+
+	int 1
+	return
+
