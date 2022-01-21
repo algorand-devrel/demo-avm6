@@ -13,10 +13,6 @@ call_selector = MethodSignature("call(application)string")
 echo_selector = MethodSignature("echo(uint64)string")
 
 
-# Util until this method is available in pyteal
-AppCaller = InlineAssembly("global CallerApplicationID", type=TealType.uint64)
-    
-
 # This method is called from off chain, it dispatches a call to the first argument treated as an application id
 @Subroutine(TealType.bytes)
 def call():
@@ -49,7 +45,7 @@ def echo():
         Bytes("In app id "),
         itoa(Txn.application_id()),
         Bytes(" which was called by app id "),
-        itoa(AppCaller),
+        itoa(Global.caller_app_id()),
     )
 
 
