@@ -9,10 +9,10 @@ prefix = Bytes("base16", "151f7c75")
 
 iters = 500
 reup_bytes = ""
-# This method is called by an account that wishes to fund another app address
-# it ensures the group transaction is structured properly then pays the app address the same amount it was sent in the payment
+
 @Subroutine(TealType.uint64)
 def compute():
+    """compute will do some interesting computery thing and gasup as needed"""
     i = ScratchVar()
 
     init = i.store(Int(0))
@@ -37,6 +37,7 @@ def compute():
 
 @Subroutine(TealType.none)
 def check_gasup(min: TealType.uint64):
+    """check_gasup takes a min value, if the current opcode budget remaining is less than that, make app call to gas up"""
     return If(
         Global.opcode_budget() < min,
         Seq(
