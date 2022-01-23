@@ -33,20 +33,26 @@ def demo():
 
         # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
         sp = client.suggested_params()
-        ptxn = PaymentTxn(addr, sp, app_addr, int(1e8))
+        ptxn = PaymentTxn(addr, sp, app_addr, int(1e9))
 
         actxn = ApplicationCallTxn(addr, sp, app_id, OnComplete.NoOpOC)
-        actxn.fee = actxn.fee * 256
+        actxn.fee = actxn.fee * 256 
 
         stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, actxn])]
         ids = [s.transaction.get_txid() for s in stxns]
 
-        client.send_transactions(stxns)
-        print("Sent {}".format(ids))
+        drr = create_dryrun(client, stxns)
+        with open("gasup.msgp", "wb") as f:
+            f.write(base64.b64decode(encoding.msgpack_encode(drr)))
 
-        results = [wait_for_confirmation(client, id, 4) for id in ids]
+        #Works
+        print_logs_recursive(client.dryrun(drr)['txns'])
 
-        print_logs_recursive(results)
+        #client.send_transactions(stxns)
+        #print("Sent {}".format(ids))
+        ## doesnt work 
+        #results = [wait_for_confirmation(client, id, 4) for id in ids]
+        #print_logs_recursive(results)
     except Exception as e:
         print("Fail :( {}".format(e.with_traceback()))
     finally:

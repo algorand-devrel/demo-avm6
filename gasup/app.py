@@ -7,7 +7,7 @@ from pytealutils.strings import itoa, rest
 # This may be provided as a constant in pyteal, for now just hardcode
 prefix = Bytes("base16", "151f7c75")
 
-iters =  570
+iters =  500
 reup_bytes = ""
 
 @Subroutine(TealType.uint64)
@@ -16,7 +16,7 @@ def compute():
     i = ScratchVar()
 
     init = i.store(Int(0))
-    cond = i.load() < Int(iters)
+    cond = i.load() <= Int(50)
     iter = i.store(i.load() + Int(1))
 
     x = ScratchVar()
@@ -25,13 +25,12 @@ def compute():
         x.store(Int(0)),
         For(init, cond, iter).Do(
             Seq(
-                x.store(x.load() + Int(10)),
-                If(i.load() % Int(10) == Int(0), check_gasup(Int(250))),
+                check_gasup(Int(700)*i.load()),
             )
         ),
+       Log(Itob(i.load())),
        Log(Itob(Global.opcode_budget())),
-       # Log(Itob(x.load())),
-        Int(1),
+       Int(1),
     )
 
 
@@ -52,7 +51,6 @@ def check_gasup(min: TealType.uint64):
                 }
             ),
             InnerTxnBuilder.Submit(),
-            Log(Itob(Global.opcode_budget())),
         ),
     )
 
@@ -105,3 +103,6 @@ if __name__ == "__main__":
 
     with open(os.path.join(path, "clear.teal"), "w") as f:
         f.write(get_clear())
+
+    with open(os.path.join(path, "reup.teal"), "w") as f:
+        f.write(get_reup())
