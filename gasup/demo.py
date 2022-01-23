@@ -9,7 +9,8 @@ import base64
 from app import get_approval, get_clear, get_reup
 
 
-client = algod.AlgodClient("a"*64, "http://localhost:4001")
+client = algod.AlgodClient("a" * 64, "http://localhost:4001")
+
 
 def get_method(c: Contract, name: str) -> Method:
     for m in c.methods:
@@ -35,7 +36,7 @@ def demo():
         ptxn = PaymentTxn(addr, sp, app_addr, int(1e8))
 
         actxn = ApplicationCallTxn(addr, sp, app_id, OnComplete.NoOpOC)
-        actxn.fee = actxn.fee*256
+        actxn.fee = actxn.fee * 256
 
         stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, actxn])]
         ids = [s.transaction.get_txid() for s in stxns]
@@ -50,6 +51,7 @@ def demo():
     finally:
         delete_app(app_id, addr, pk)
 
+
 def print_logs_recursive(results):
     for res in results:
         if "logs" in res:
@@ -57,15 +59,16 @@ def print_logs_recursive(results):
                 print(l.hex())
         if "inner-txns" in res:
             print_logs_recursive(res["inner-txns"])
-            
+
+
 def delete_app(app_id, addr, pk):
     # Get suggested params from network
     sp = client.suggested_params()
 
     # Create the transaction
-    txn = ApplicationDeleteTxn( addr, sp, app_id )
+    txn = ApplicationDeleteTxn(addr, sp, app_id)
 
-    #sign it
+    # sign it
     signed = txn.sign(pk)
 
     # Ship it
@@ -73,6 +76,7 @@ def delete_app(app_id, addr, pk):
 
     # Wait for the result so we can return the app id
     result = wait_for_confirmation(client, txid, 4)
+
 
 def create_app(addr, pk):
     global reup_bytes
@@ -96,7 +100,13 @@ def create_app(addr, pk):
 
     # Create the transaction
     create_txn = ApplicationCreateTxn(
-        addr, sp, 0,  app_bytes, clear_bytes,  schema, schema,
+        addr,
+        sp,
+        0,
+        app_bytes,
+        clear_bytes,
+        schema,
+        schema,
     )
 
     # Sign it
@@ -117,6 +127,6 @@ def get_contract_from_json():
 
     return Contract.from_json(js)
 
+
 if __name__ == "__main__":
     demo()
-
