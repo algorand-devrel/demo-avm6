@@ -42,6 +42,7 @@ def demo():
         ids = [s.transaction.get_txid() for s in stxns]
 
         client.send_transactions(stxns)
+        print("Sent {}".format(ids))
 
         results = [wait_for_confirmation(client, id, 4) for id in ids]
 
@@ -56,7 +57,7 @@ def print_logs_recursive(results):
     for res in results:
         if "logs" in res:
             for l in [base64.b64decode(log) for log in res["logs"]]:
-                print(l.hex())
+                print(int(l.hex(), 16))
         if "inner-txns" in res:
             print_logs_recursive(res["inner-txns"])
 
