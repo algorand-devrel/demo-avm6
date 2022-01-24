@@ -44,8 +44,12 @@ def demo():
             actxn2.fee = actxn2.fee * 17
             actxns.append(actxn2)
 
+        
+        tohash = "compute"
+        times = 3500
+
         actxn = ApplicationCallTxn(
-            addr, sp, app_id, OnComplete.NoOpOC, app_args=["compute"]
+            addr, sp, app_id, OnComplete.NoOpOC, app_args=[tohash, times]
         )
         actxn.fee = actxn.fee * 17
 
@@ -57,8 +61,9 @@ def demo():
         #    f.write(base64.b64decode(encoding.msgpack_encode(drr)))
 
         
-        hash = b"compute"
-        for _ in range(3700):
+
+        hash = tohash.encode()
+        for _ in range(times):
             hash = sha256(hash).digest()
 
         print("Hash should be: {}".format(hash.hex()))
