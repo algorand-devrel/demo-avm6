@@ -35,24 +35,25 @@ def demo():
         sp = client.suggested_params()
         ptxn = PaymentTxn(addr, sp, app_addr, int(1e9))
 
-        actxn = ApplicationCallTxn(addr, sp, app_id, OnComplete.NoOpOC)
-        actxn.fee = actxn.fee * 256 
+        actxns = []
+        for i in range(14):
+            actxn2 = ApplicationCallTxn(
+                addr, sp, app_id, OnComplete.NoOpOC, note=str(i).encode()
+            )
+            actxn2.fee = actxn2.fee * 16 
+            actxns.append(actxn2)
 
-        stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, actxn])]
+        actxn = ApplicationCallTxn(
+            addr, sp, app_id, OnComplete.NoOpOC, app_args=["compute"]
+        )
+        actxn.fee = actxn.fee * 32 
+
+        stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, *actxns, actxn])]
         ids = [s.transaction.get_txid() for s in stxns]
 
-        drr = create_dryrun(client, stxns)
-        with open("gasup.msgp", "wb") as f:
-            f.write(base64.b64decode(encoding.msgpack_encode(drr)))
-
-        #Works
-        print_logs_recursive(client.dryrun(drr)['txns'])
-
-        #client.send_transactions(stxns)
-        #print("Sent {}".format(ids))
-        ## doesnt work 
-        #results = [wait_for_confirmation(client, id, 4) for id in ids]
-        #print_logs_recursive(results)
+        client.send_transactions(stxns)
+        results = [wait_for_confirmation(client, id, 4) for id in ids]
+        print_logs_recursive(results)
     except Exception as e:
         print("Fail :( {}".format(e.with_traceback()))
     finally:
