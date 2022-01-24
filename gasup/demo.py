@@ -1,3 +1,4 @@
+from hashlib import sha256
 from algosdk import *
 from algosdk.atomic_transaction_composer import *
 from algosdk.abi import *
@@ -51,13 +52,22 @@ def demo():
         stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, *actxns, actxn])]
         ids = [s.transaction.get_txid() for s in stxns]
 
-        #drr = create_dryrun(client, stxns)
-        #with open("gasup.msgp", "wb") as f:
+        # drr = create_dryrun(client, stxns)
+        # with open("gasup.msgp", "wb") as f:
         #    f.write(base64.b64decode(encoding.msgpack_encode(drr)))
+
+        
+        hash = b"compute"
+        for _ in range(3700):
+            hash = sha256(hash).digest()
+
+        print("Hash should be: {}".format(hash.hex()))
+
 
         client.send_transactions(stxns)
         # doesnt work
         results = [wait_for_confirmation(client, id, 4) for id in ids]
+        print("Got: ")
         print_logs_recursive(results)
     except Exception as e:
         print("Fail :( {}".format(e.with_traceback()))
@@ -69,7 +79,8 @@ def print_logs_recursive(results):
     for res in results:
         if "logs" in res:
             for l in [base64.b64decode(log) for log in res["logs"]]:
-                print(int(l.hex(), 16))
+                print(l.hex()),
+                #print(int(l.hex(), 16))
         if "inner-txns" in res:
             print_logs_recursive(res["inner-txns"])
 

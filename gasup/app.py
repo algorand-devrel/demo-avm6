@@ -14,11 +14,22 @@ reup_bytes = ""
 @Subroutine(TealType.uint64)
 def compute():
     """compute will use the large opcode budget to do something cool, idk what tho"""
+    i = ScratchVar()
+    init = i.store(Int(0))
+    cond = i.load() < Int(3700)
+    iter = i.store(i.load() + Int(1))
+
     return Seq(
         Pop(max_gas()),
-        # Do something interesting with the thicc budget
-        # should be >173k ops available if we called with 15 total app call txns that all gassed up
-        Log(Itob(Global.opcode_budget())),
+        (hash := ScratchVar()).store(Txn.application_args[0]),
+
+        For(init, cond, iter).Do(
+            # Do something interesting with the thicc budget
+            # should be >173k ops available if we called with 15 total app call txns that all gassed up
+            # sha256 is 35 ops so we should be able to do it ~4k times but for loop takes ops too, so we use 3700
+            hash.store(Sha256(hash.load())),
+        ),
+        Log(hash.load()),
         Int(1),
     )
 
