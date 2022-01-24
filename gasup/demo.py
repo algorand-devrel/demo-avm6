@@ -44,7 +44,6 @@ def demo():
             actxn2.fee = actxn2.fee * 17
             actxns.append(actxn2)
 
-        
         tohash = "compute"
         times = 3500
 
@@ -82,7 +81,7 @@ def print_logs_recursive(results):
         if "logs" in res:
             for l in [base64.b64decode(log) for log in res["logs"]]:
                 print(l.hex()),
-                #print(int(l.hex(), 16))
+                # print(int(l.hex(), 16))
         if "inner-txns" in res:
             print_logs_recursive(res["inner-txns"])
 

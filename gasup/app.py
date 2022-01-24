@@ -8,7 +8,8 @@ from pytealutils.strings import itoa, rest
 prefix = Bytes("base16", "151f7c75")
 
 # This is a minimal program that just returns 1
-reup_bytes = Bytes("base16", "068101") #pragma version 6; int 1
+reup_bytes = Bytes("base16", "068101")  # pragma version 6; int 1
+
 
 @Subroutine(TealType.uint64)
 def compute():
@@ -21,7 +22,6 @@ def compute():
     return Seq(
         Pop(max_gas()),
         (hash := ScratchVar()).store(Txn.application_args[0]),
-
         For(init, cond, iter).Do(
             # Do something interesting with the thicc budget
             # should be >173k ops available if we called with 15 total app call txns that all gassed up
@@ -38,10 +38,11 @@ def max_gas():
     """Call gasup the max number of times for a single application"""
     return Seq(
         InnerTxnBuilder.Begin(),
+        # Inline them instead of iterating to save on ops at the cost of space
         *[Seq(gasup_txn(), InnerTxnBuilder.Next()) for _ in range(15)],
         gasup_txn(),
         InnerTxnBuilder.Submit(),
-        Int(1)
+        Int(1),
     )
 
 
