@@ -7,9 +7,8 @@ from pytealutils.strings import itoa, rest
 # This may be provided as a constant in pyteal, for now just hardcode
 prefix = Bytes("base16", "151f7c75")
 
-iters = 15
-reup_bytes = ""
-
+# This is a minimal program that just returns 1
+reup_bytes = Bytes("base16", "068101") #pragma version 6; int 1
 
 @Subroutine(TealType.uint64)
 def compute():
@@ -52,8 +51,8 @@ def gasup_txn():
         {
             TxnField.type_enum: TxnType.ApplicationCall,
             TxnField.on_completion: OnComplete.DeleteApplication,
-            TxnField.approval_program: Bytes("base16", "068101"), #pragma version 6; int 1
-            TxnField.clear_state_program: Bytes("base16", "068101"),
+            TxnField.approval_program: reup_bytes,
+            TxnField.clear_state_program: reup_bytes,
             TxnField.fee: Int(0),
         }
     )
@@ -100,10 +99,7 @@ def get_reup():
     )
 
 
-def get_approval(reup):
-    global reup_bytes
-    reup_bytes = reup
-
+def get_approval():
     return compileTeal(approval(), mode=Mode.Application, version=6)
 
 

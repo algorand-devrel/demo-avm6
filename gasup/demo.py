@@ -110,11 +110,7 @@ def create_app(addr, pk):
     sp = client.suggested_params()
 
     # Read in approval teal source && compile
-    reup_result = client.compile(get_reup())
-    reup_bytes = base64.b64decode(reup_result["result"])
-
-    # Read in approval teal source && compile
-    app_result = client.compile(get_approval(reup_bytes))
+    app_result = client.compile(get_approval())
     app_bytes = base64.b64decode(app_result["result"])
 
     # Read in clear teal source && compile
