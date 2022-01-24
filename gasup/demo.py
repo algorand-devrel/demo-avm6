@@ -60,14 +60,11 @@ def demo():
         # with open("gasup.msgp", "wb") as f:
         #    f.write(base64.b64decode(encoding.msgpack_encode(drr)))
 
-        
-
         hash = tohash.encode()
         for _ in range(times):
             hash = sha256(hash).digest()
 
         print("Hash should be: {}".format(hash.hex()))
-
 
         client.send_transactions(stxns)
         # doesnt work

@@ -52,8 +52,8 @@ def gasup_txn():
         {
             TxnField.type_enum: TxnType.ApplicationCall,
             TxnField.on_completion: OnComplete.DeleteApplication,
-            TxnField.approval_program: Bytes(reup_bytes),
-            TxnField.clear_state_program: Bytes(reup_bytes),
+            TxnField.approval_program: Bytes("base16", "068101"), #pragma version 6; int 1
+            TxnField.clear_state_program: Bytes("base16", "068101"),
             TxnField.fee: Int(0),
         }
     )
