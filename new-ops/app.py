@@ -6,44 +6,67 @@ from pytealutils.strings import itoa
 prefix = Bytes("base16", "151f7c75")
 
 acct_param_selector = MethodSignature("acct_param(account)string")
-bsqrt_selector = MethodSignature("bsqrt(uint256)uint256")
+bsqrt_selector = MethodSignature("bsqrt(uint64)uint64")
+gitxn_selector = MethodSignature("gitxn(account,uint64,account,uint64)uint64")
 budget_pad_selector = MethodSignature("pad()void")
 
 @Subroutine(TealType.none)
-def gtxns():
+def gitxns():
 
-    # gitxn t f	        : field F of the Tth transaction in the last inner group submitted
-    # gitxna t f i      : Ith value of the array field F from the Tth transaction in the last inner group submitted
-    # gloadss	        : Bth scratch space value of the Ath transaction in the current group
+    acct_ref1 = Btoi(Txn.application_args[1])
+    amt1 = Btoi(Txn.application_args[2])
 
-    pass
+    acct_ref2 = Btoi(Txn.application_args[3])
+    amt2 = Btoi(Txn.application_args[4])
 
+    return return_any(Seq(
+        # Start building group
+        InnerTxnBuilder.Begin(),
+        # Set fields on first group
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.Payment,
+            TxnField.receiver: Txn.accounts[acct_ref1],
+            TxnField.amount: amt1,
+            TxnField.fee: Int(0) # make caller cover fees 
+        }),
+        # Start building next txn in group
+        InnerTxnBuilder.Next(),
+        # Set fields on second group
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.Payment,
+            TxnField.receiver: Txn.accounts[acct_ref2],
+            TxnField.amount: amt2,
+            TxnField.fee: Int(0) # make caller cover fees 
+        }),
+        # Send  group
+        InnerTxnBuilder.Submit(),
+        Itob(Gitxn[0].amount() + Gitxn[1].amount())
+    ))
 
 @Subroutine(TealType.none)
 def acct_param():
     acct_ref = Btoi(Txn.application_args[1])
-    return Seq() 
-   # return ret_log(
-   #     Seq(
-   #         aa := AccountParam.authAddr(acct_ref),
-   #         mb := AccountParam.minBalance(acct_ref),
-   #         b := AccountParam.balance(acct_ref),
-   #         Concat(
-   #             Bytes("Auth addr: '"),
-   #             If(aa.hasValue() , aa.value(), Bytes("<None>")),
-   #             Bytes("', Min balance: "),
-   #             Itob(If(mb.hasValue(), mb.value(), Int(0))),
-   #             Bytes(", Balance: "),
-   #             Itob(If(b.hasValue(), b.value(), Int(0))),
-   #         )
-   #     )
-   # )
+    return return_string(
+        Seq(
+            aa := AccountParam.authAddr(acct_ref),
+            mb := AccountParam.minBalance(acct_ref),
+            b := AccountParam.balance(acct_ref),
+            Concat(
+                Bytes("Auth addr: '"),
+                If(aa.hasValue() , aa.value(), Bytes("<None>")),
+                Bytes("', Min balance: "),
+                itoa(If(mb.hasValue(), mb.value(), Int(0))),
+                Bytes(", Balance (in algos): "),
+                itoa(If(b.hasValue(), b.value()/Int(1000000), Int(0))),
+            )
+        )
+    )
 
 @Subroutine(TealType.none)
 def bsqrt():
     # Leave it as bytes
     big_int = Txn.application_args[1]
-    return ret_log(BytesSqrt(big_int))
+    return return_any(Itob(Btoi(BytesSqrt(big_int))))
 
 # Util to add length to string to make it abi compliant, will have better interface in pyteal
 @Subroutine(TealType.bytes)
@@ -52,9 +75,13 @@ def string_encode(str: TealType.bytes):
 
 # Util to log bytes with return prefix
 @Subroutine(TealType.none)
-def ret_log(value: TealType.bytes):
+def return_string(value: TealType.bytes):
     return Log(Concat(prefix, string_encode(value)))
 
+# Util to log bytes with return prefix
+@Subroutine(TealType.none)
+def return_any(value: TealType.bytes):
+    return Log(Concat(prefix, value))
 
 
 def approval():
@@ -67,6 +94,10 @@ def approval():
         [
             Txn.application_args[0] == bsqrt_selector,
             Return(Seq(bsqrt(), Int(1))),
+        ],
+        [
+            Txn.application_args[0] == gitxn_selector,
+            Return(Seq(gitxns(), Int(1))),
         ],
         [
             Txn.application_args[0] == budget_pad_selector,

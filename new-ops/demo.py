@@ -18,9 +18,14 @@ def get_method(c: Contract, name: str) -> Method:
 
 
 def demo():
-    # Create acct
-    addr, pk = get_accounts()[0]
+
+    accts = get_accounts()
+
+    addr, pk = accts[0] 
     print("Using {}".format(addr))
+
+    addr2, _ = accts[1]
+    addr3, _ = accts[2]
 
     # Read in the json contract description and create a Contract object
     c = get_contract_from_json() 
@@ -28,30 +33,34 @@ def demo():
     try:
         # Create app
         app_id = create_app(addr, pk)
-        print("Created App with id: {}".format(app_id))
+        app_addr = logic.get_application_address(app_id)
+        print("Created App with id: {} and address: {}".format(app_id, app_addr))
+
+        sp = client.suggested_params()
+
+        paytxn = PaymentTxn(addr, sp, app_addr, 10000000)
+        txid = client.send_transaction(paytxn.sign(pk))
+        wait_for_confirmation(client, txid, 2)
+
 
         signer = AccountTransactionSigner(pk)
 
-        # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
-        sp = client.suggested_params()
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
-        # add a method call to "call" method, pass the second app id so we can dispatch a call
-        #atc.add_method_call(app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr])
+        # add a method call to "acct_param" method, pass the second account we want to get params for
+        atc.add_method_call(app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr])
+
+        # add a method call to "bsqrt" method, pass a biggish number that gets encoded for us
         atc.add_method_call(app_id, get_method(c, "bsqrt"), addr, sp, signer, method_args=[int(1e6)**2])
-        # Somehow this is expensive?
-        atc.add_method_call(app_id, get_method(c, "pad"), addr, sp, signer)
-        # run the transaction and wait for the restuls
-        #result = atc.execute(client, 4)
 
-        txns = atc.gather_signatures()
-        drr = create_dryrun(client, txns)
-        result = client.dryrun(drr)
+        # add a method call to "gitxn" method, pass a the accounts we want to pay and how much to pay them 
+        sp.fee = sp.min_fee * 3 # increase fee so we cover inners
+        atc.add_method_call(app_id, get_method(c, "gitxn"), addr, sp, signer, method_args=[addr2, 10000, addr3, 20000])
 
-        logs, cost, stack = get_stats_from_dryrun(result)
-        print("cost {}".format(cost))
-        print("stack {}".format(stack))
-        print("""Result of inner app call: {}""".format(logs))
+        result = atc.execute(client, 4)
+        for res in result.abi_results:
+            print(res.return_value)
+
     finally:
         delete_app(app_id, addr, pk)
 
@@ -60,23 +69,21 @@ def demo():
 def raise_rejected(txn):
     if "app-call-messages" in txn:
         if "REJECT" in txn["app-call-messages"]:
+            print(txn)
             raise Exception(txn["app-call-messages"][-1])
 
 
 def get_stats_from_dryrun(dryrun_result):
     logs, cost, trace_len = [], [], []
-    txn = dryrun_result["txns"][0]
-    raise_rejected(txn)
-    if "logs" in txn:
-        logs.extend([base64.b64decode(l).hex() for l in txn["logs"]])
-    if "cost" in txn:
-        cost.append(txn["cost"])
-    if "app-call-trace" in txn:
-        trace_len.append(len(txn["app-call-trace"]))
+    for txn in dryrun_result["txns"]:
+        raise_rejected(txn)
+        if "logs" in txn:
+            logs.extend([base64.b64decode(l).hex() for l in txn["logs"]])
+        if "cost" in txn:
+            cost.append(txn["cost"])
+        if "app-call-trace" in txn:
+            trace_len.append(len(txn["app-call-trace"]))
     return logs, cost, trace_len
-
-
-
 
 
 
