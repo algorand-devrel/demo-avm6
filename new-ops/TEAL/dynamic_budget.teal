@@ -1,0 +1,63 @@
+// This application will increase opcode budget depending on how much fee you
+// add. Each time you increase the fee by 0.001 Algo a new inner transaction
+// will be called, increasing you total opcode budget.
+#pragma version 6
+
+txn ApplicationID
+bz handle_setup
+
+method "get_budget()uint64"
+txn ApplicationArgs 0
+==
+bnz handle_get_budget
+
+err
+
+// Setup
+handle_setup:
+	int 1
+	return
+
+// Get Budget
+handle_get_budget:
+	txn Fee
+	global MinTxnFee
+	-
+	global MinTxnFee
+	/
+	dup
+	bz skip_inc_budget
+	callsub sub_inc_budget
+	skip_inc_budget:
+	
+	global OpcodeBudget
+	itob
+	byte 0x151f7c75
+	swap
+	concat
+	log
+	
+	int 1
+	return
+
+// Inc Budget Subroutine
+sub_inc_budget:
+	itxn_begin
+	int appl
+	itxn_field TypeEnum
+	int DeleteApplication
+	itxn_field OnCompletion
+	byte 0x068101
+	itxn_field ApprovalProgram
+	byte 0x068101
+	itxn_field ClearStateProgram
+	int 0
+	itxn_field Fee
+	itxn_submit
+	int 1
+	-
+	dup
+	bnz sub_inc_budget
+	pop
+	retsub
+
