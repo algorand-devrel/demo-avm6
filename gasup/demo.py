@@ -40,18 +40,23 @@ def demo():
             actxn2 = ApplicationCallTxn(
                 addr, sp, app_id, OnComplete.NoOpOC, note=str(i).encode()
             )
-            actxn2.fee = actxn2.fee * 16 
+            actxn2.fee = actxn2.fee * 17
             actxns.append(actxn2)
 
         actxn = ApplicationCallTxn(
             addr, sp, app_id, OnComplete.NoOpOC, app_args=["compute"]
         )
-        actxn.fee = actxn.fee * 32 
+        actxn.fee = actxn.fee * 17
 
         stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, *actxns, actxn])]
         ids = [s.transaction.get_txid() for s in stxns]
 
+        #drr = create_dryrun(client, stxns)
+        #with open("gasup.msgp", "wb") as f:
+        #    f.write(base64.b64decode(encoding.msgpack_encode(drr)))
+
         client.send_transactions(stxns)
+        # doesnt work
         results = [wait_for_confirmation(client, id, 4) for id in ids]
         print_logs_recursive(results)
     except Exception as e:
