@@ -1,0 +1,6 @@
+{
+    "name": "Acct Params Get Demo",
+    "description": "A demo application to show off some of the new AVM 1.1 opcodes. These include: `acct_params_get`, with the fields `AcctBalance`, `AcctMinBalance`, and `AcctAuthAddr`.",
+    "networks": {},
+    "methods": []
+}
