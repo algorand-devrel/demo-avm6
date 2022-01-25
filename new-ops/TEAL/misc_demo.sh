@@ -21,7 +21,5 @@ echo $APP_ID > .APP_ID
 
 ${GOAL} app method --app-id ${APP_ID} --method "opcode_budget_demo()uint64" -f ${USER1} --fee 2000 --foreign-app ${INT1_ID}
 
-${GOAL} app method --app-id ${APP_ID} --method "bsqrt_demo(byte[])byte" -f ${USER1} --arg '[255]'
-#${GOAL} clerk dryrun --dryrun-dump -t test.txn -o test.dr
-#${SB} copyFrom test.dr
+${GOAL} app method --app-id ${APP_ID} --method "bsqrt_demo(byte[])byte" -f ${USER1} --arg '[128]'
 

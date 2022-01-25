@@ -66,15 +66,10 @@ opcode_budget_demo:
 bsqrt_demo:
 	txn ApplicationArgs 1
 	bsqrt
-	dup
-	len
-	itob
-	extract 6 2
-	swap
-	concat
 
 	byte 0x151f7c75 // SHA512/215 of "return"
 	swap
+	concat
 	log
 
 	int 1
