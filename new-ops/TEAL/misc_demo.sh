@@ -10,8 +10,8 @@ CREATOR=${ACCOUNTS[0]}
 USER1=${ACCOUNTS[1]}
 USER2=${ACCOUNTS[2]}
 
-# Copy all teal files into sandbox
-find . -iname "*.teal" | xargs -L 1 ${SB} copyTo 
+${SB} copyTo misc_demo.teal
+${SB} copyTo clear.teal
 
 INT1_ID=$(${GOAL} app create --creator ${CREATOR} --approval-prog clear.teal --clear-prog clear.teal --global-byteslices 0 --global-ints 0 --local-byteslices 0 --local-ints 0 | grep 'Created app with app index' | awk '{print $6}' | tr -d '\r')
 echo $INT1_ID > .INT1_ID
