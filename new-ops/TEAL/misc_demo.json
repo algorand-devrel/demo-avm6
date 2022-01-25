@@ -1,0 +1,30 @@
+{
+    "name": "Misc Demo",
+    "description": "A demo application to show off some of the new AVM 1.1 opcodes. These include: `OpcodeBudget`, and `bsqrt`",
+    "networks": {},
+    "methods": [
+        {
+            "name": "opcode_budget_demo",
+            "description": "A typical application call has an opcode budget of 700. This call will perform an inner transaction which gives the application an additional 700 (minus the cost to perform the inner tranactino).",
+            "args": [],
+            "returns": {
+                "type": "uint64",
+                "desc": "The opcode budget available in the applications."
+            }
+        },
+        {
+            "name": "bsqrt_demo",
+            "description": "A demonstration of the bsqrt opcode.",
+            "args": [
+                {
+                    "type": "byte[]",
+                    "desc": "Input byte array to use with bsqrt."
+                }
+            ],
+            "returns": {
+                "type": "byte",
+                "desc": "The largest integer I such that I^2 <= A. A and I are interpreted as big-endian unsigned integers."
+            }
+        }
+    ]
+}
