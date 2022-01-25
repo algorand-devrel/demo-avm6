@@ -9,7 +9,8 @@ import base64
 
 from app import get_approval, get_clear
 
-client = algod.AlgodClient("a"*64, "http://localhost:4001")
+client = algod.AlgodClient("a" * 64, "http://localhost:4001")
+
 
 def get_method(c: Contract, name: str) -> Method:
     for m in c.methods:
@@ -17,13 +18,14 @@ def get_method(c: Contract, name: str) -> Method:
             return m
     raise Exception("No method with the name {}".format(name))
 
+
 def demo():
     # Create acct
     addr, pk = get_accounts()[0]
     print("Using {}".format(addr))
 
     # Read in the json contract description and create a Contract object
-    c = get_contract_from_json() 
+    c = get_contract_from_json()
 
     fund_proxy_app, funded_app_id = 0, 0
 
@@ -38,7 +40,7 @@ def demo():
 
         # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
         sp = client.suggested_params()
-        sp.fee = sp.min_fee*2
+        sp.fee = sp.min_fee * 2
 
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
@@ -55,9 +57,17 @@ def demo():
         # run the transaction and wait for the restuls
         result = atc.execute(client, 4)
 
-        funded_app_id = client.pending_transaction_info(result.tx_ids[0])['application-index']
+        funded_app_id = client.pending_transaction_info(result.tx_ids[0])[
+            "application-index"
+        ]
         print("Created new application: {}".format(funded_app_id))
-        print("Funded it with inner transaction: {}".format(client.pending_transaction_info(result.tx_ids[-1])['inner-txns'][0]['txn']))
+        print(
+            "Funded it with inner transaction: {}".format(
+                client.pending_transaction_info(result.tx_ids[-1])["inner-txns"][0][
+                    "txn"
+                ]
+            )
+        )
     except Exception as e:
         print("Failzore: {}".format(e.with_traceback))
     finally:
@@ -72,9 +82,9 @@ def delete_app(app_id, addr, pk):
     sp = client.suggested_params()
 
     # Create the transaction
-    txn = ApplicationDeleteTxn( addr, sp, app_id )
+    txn = ApplicationDeleteTxn(addr, sp, app_id)
 
-    #sign it
+    # sign it
     signed = txn.sign(pk)
 
     # Ship it
@@ -100,9 +110,7 @@ def get_app_create_txn(addr):
     schema = StateSchema(0, 0)
 
     # Create the transaction
-    return ApplicationCreateTxn(
-        addr, sp, 0, app_bytes, clear_bytes, schema, schema
-    )
+    return ApplicationCreateTxn(addr, sp, 0, app_bytes, clear_bytes, schema, schema)
 
 
 def create_app(addr, pk):
@@ -120,12 +128,13 @@ def create_app(addr, pk):
 
     return result["application-index"]
 
+
 def get_contract_from_json():
     with open("contract.json") as f:
         js = f.read()
 
     return Contract.from_json(js)
 
+
 if __name__ == "__main__":
     demo()
-

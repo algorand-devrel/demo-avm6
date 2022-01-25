@@ -1,8 +1,7 @@
 from algosdk.kmd import KMDClient
 
-KMD_ADDRESS = "http://localhost:4002"
+KMD_ADDRESS = "http://localhost:40002"
 KMD_TOKEN = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-
 KMD_WALLET_NAME = "unencrypted-default-wallet"
 KMD_WALLET_PASSWORD = ""
 

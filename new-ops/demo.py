@@ -8,7 +8,8 @@ import base64
 
 from app import get_approval, get_clear
 
-client = algod.AlgodClient("a"*64, "http://localhost:4001")
+client = algod.AlgodClient("a" * 64, "http://localhost:4001")
+
 
 def get_method(c: Contract, name: str) -> Method:
     for m in c.methods:
@@ -21,14 +22,14 @@ def demo():
 
     accts = get_accounts()
 
-    addr, pk = accts[0] 
+    addr, pk = accts[0]
     print("Using {}".format(addr))
 
     addr2, _ = accts[1]
     addr3, _ = accts[2]
 
     # Read in the json contract description and create a Contract object
-    c = get_contract_from_json() 
+    c = get_contract_from_json()
 
     try:
         # Create app
@@ -42,20 +43,35 @@ def demo():
         txid = client.send_transaction(paytxn.sign(pk))
         wait_for_confirmation(client, txid, 2)
 
-
         signer = AccountTransactionSigner(pk)
 
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
         # add a method call to "acct_param" method, pass the second account we want to get params for
-        atc.add_method_call(app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr])
+        atc.add_method_call(
+            app_id, get_method(c, "acct_param"), addr, sp, signer, method_args=[addr]
+        )
 
         # add a method call to "bsqrt" method, pass a biggish number that gets encoded for us
-        atc.add_method_call(app_id, get_method(c, "bsqrt"), addr, sp, signer, method_args=[int(1e6)**2])
+        atc.add_method_call(
+            app_id,
+            get_method(c, "bsqrt"),
+            addr,
+            sp,
+            signer,
+            method_args=[int(1e6) ** 2],
+        )
 
-        # add a method call to "gitxn" method, pass a the accounts we want to pay and how much to pay them 
-        sp.fee = sp.min_fee * 3 # increase fee so we cover inners
-        atc.add_method_call(app_id, get_method(c, "gitxn"), addr, sp, signer, method_args=[addr2, 10000, addr3, 20000])
+        # add a method call to "gitxn" method, pass a the accounts we want to pay and how much to pay them
+        sp.fee = sp.min_fee * 3  # increase fee so we cover inners
+        atc.add_method_call(
+            app_id,
+            get_method(c, "gitxn"),
+            addr,
+            sp,
+            signer,
+            method_args=[addr2, 10000, addr3, 20000],
+        )
 
         result = atc.execute(client, 4)
         for res in result.abi_results:
@@ -63,7 +79,6 @@ def demo():
 
     finally:
         delete_app(app_id, addr, pk)
-
 
 
 def raise_rejected(txn):
@@ -86,15 +101,14 @@ def get_stats_from_dryrun(dryrun_result):
     return logs, cost, trace_len
 
 
-
 def delete_app(app_id, addr, pk):
     # Get suggested params from network
     sp = client.suggested_params()
 
     # Create the transaction
-    txn = ApplicationDeleteTxn( addr, sp, app_id )
+    txn = ApplicationDeleteTxn(addr, sp, app_id)
 
-    #sign it
+    # sign it
     signed = txn.sign(pk)
 
     # Ship it
@@ -135,12 +149,13 @@ def create_app(addr, pk):
 
     return result["application-index"]
 
+
 def get_contract_from_json():
     with open("contract.json") as f:
         js = f.read()
 
     return Contract.from_json(js)
 
+
 if __name__ == "__main__":
     demo()
-

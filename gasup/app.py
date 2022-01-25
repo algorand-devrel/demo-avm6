@@ -36,26 +36,61 @@ def compute():
 @Subroutine(TealType.uint64)
 def max_gas():
     """Call gasup the max number of times for a single application"""
+    max_txns = 256
+    i = ScratchVar()
+    init = i.store(Int(0))
+    cond = i.load() < Int(max_txns)
+    iter = i.store(i.load() + Int(1))
+
     return Seq(
-        InnerTxnBuilder.Begin(),
-        # Inline them instead of iterating to save on ops at the cost of space
-        *[Seq(gasup_txn(), InnerTxnBuilder.Next()) for _ in range(15)],
-        gasup_txn(),
-        InnerTxnBuilder.Submit(),
+        For(init, cond, iter).Do(
+            Seq(
+                InnerTxnBuilder.Begin(),
+                InnerTxnBuilder.SetFields(
+                    {
+                        TxnField.type_enum: TxnType.ApplicationCall,
+                        TxnField.application_id: Txn.applications[1],
+                        TxnField.fee: Int(0),
+                    }
+                ),
+                InnerTxnBuilder.Submit(),
+            ),
+        ),
         Int(1),
     )
 
 
 @Subroutine(TealType.none)
-def gasup_txn():
-    return InnerTxnBuilder.SetFields(
-        {
-            TxnField.type_enum: TxnType.ApplicationCall,
-            TxnField.on_completion: OnComplete.DeleteApplication,
-            TxnField.approval_program: reup_bytes,
-            TxnField.clear_state_program: reup_bytes,
-            TxnField.fee: Int(0),
-        }
+def gasup_destroy(id: TealType.uint64):
+    return Seq(
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields(
+            {
+                TxnField.type_enum: TxnType.ApplicationCall,
+                TxnField.application_id: id,
+                TxnField.on_completion: OnComplete.NoOp,
+                TxnField.fee: Int(0),
+            }
+        ),
+        InnerTxnBuilder.Submit(),
+    )
+
+
+@Subroutine(TealType.uint64)
+def gasup_create():
+    return Seq(
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields(
+            {
+                TxnField.type_enum: TxnType.ApplicationCall,
+                TxnField.on_completion: OnComplete.NoOp,
+                TxnField.approval_program: reup_bytes,
+                TxnField.clear_state_program: reup_bytes,
+                TxnField.fee: Int(0),
+            }
+        ),
+        InnerTxnBuilder.Submit(),
+        Gitxn[0].created_application_id(),
     )
 
 
@@ -64,7 +99,7 @@ def check_gasup(min: TealType.uint64):
     """check_gasup takes a min value, if the current opcode budget remaining is less than that, make app call to gas up"""
     return If(
         Global.opcode_budget() < min,
-        Seq(InnerTxnBuilder.Begin(), gasup_txn(), InnerTxnBuilder.Submit()),
+        Seq(InnerTxnBuilder.Begin(), gasup_create(), InnerTxnBuilder.Submit()),
     )
 
 
@@ -94,7 +129,7 @@ def clear():
 
 def get_reup():
     return compileTeal(
-        Txn.on_completion() == OnComplete.DeleteApplication,
+        Int(1),
         mode=Mode.Application,
         version=6,
     )

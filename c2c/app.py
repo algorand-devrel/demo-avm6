@@ -20,25 +20,28 @@ def call():
     # Get the reference into the applications array
     app_ref = Btoi(Txn.application_args[1])
 
-
     return Seq(
         InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.ApplicationCall,
-            # access the actual id specified by the 2nd app arg
-            TxnField.application_id: Txn.applications[app_ref],
-            # Pass the selector as the first arg to trigger the `echo` method
-            TxnField.application_args: [echo_selector],
-            # Set fee to 0 so caller has to cover it
-            TxnField.fee: Int(0)
-        }),
+        InnerTxnBuilder.SetFields(
+            {
+                TxnField.type_enum: TxnType.ApplicationCall,
+                # access the actual id specified by the 2nd app arg
+                TxnField.application_id: Txn.applications[app_ref],
+                # Pass the selector as the first arg to trigger the `echo` method
+                TxnField.application_args: [echo_selector],
+                # Set fee to 0 so caller has to cover it
+                TxnField.fee: Int(0),
+            }
+        ),
         InnerTxnBuilder.Submit(),
         # Get the first log from the last inner transaction
-        rest(InnerTxn.logs[0], Int(6)) # Trim off return (4 bytes) Trim off string length (2 bytes)
+        rest(
+            InnerTxn.logs[0], Int(6)
+        ),  # Trim off return (4 bytes) Trim off string length (2 bytes)
     )
 
 
-# This is called from the other application, just echos some stats 
+# This is called from the other application, just echos some stats
 @Subroutine(TealType.bytes)
 def echo():
     return Concat(
@@ -49,11 +52,11 @@ def echo():
     )
 
 
-
 # Util to add length to string to make it abi compliant, will have better interface in pyteal
 @Subroutine(TealType.bytes)
 def string_encode(str: TealType.bytes):
     return Concat(Extract(Itob(Len(str)), Int(6), Int(2)), str)
+
 
 # Util to log bytes with return prefix
 @Subroutine(TealType.none)
@@ -63,20 +66,27 @@ def ret_log(value: TealType.bytes):
 
 def approval():
     # Define our abi handlers, route based on method selector defined above
-    handlers= [
+    handlers = [
         [
             Txn.application_args[0] == call_selector,
             Return(Seq(ret_log(call()), Int(1))),
-        ],[
+        ],
+        [
             Txn.application_args[0] == echo_selector,
             Return(Seq(ret_log(echo()), Int(1))),
-        ]
+        ],
     ]
 
     return Cond(
         [Txn.application_id() == Int(0), Approve()],
-        [Txn.on_completion() == OnComplete.DeleteApplication, Return(Txn.sender() == Global.creator_address())],
-        [Txn.on_completion() == OnComplete.UpdateApplication, Return(Txn.sender() == Global.creator_address())],
+        [
+            Txn.on_completion() == OnComplete.DeleteApplication,
+            Return(Txn.sender() == Global.creator_address()),
+        ],
+        [
+            Txn.on_completion() == OnComplete.UpdateApplication,
+            Return(Txn.sender() == Global.creator_address()),
+        ],
         [Txn.on_completion() == OnComplete.CloseOut, Approve()],
         [Txn.on_completion() == OnComplete.OptIn, Approve()],
         # Add abi handlers to main router conditional
