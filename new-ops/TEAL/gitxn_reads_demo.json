@@ -1,0 +1,26 @@
+{
+    "name": "Gitxn Demo",
+    "description": "A demo application to show off some of the new AVM 1.1 opcodes. These include: `itxn_next`, `gitxn`, and `gitxna`",
+    "networks": {},
+    "methods": [
+        {
+            "name": "gitxn_demo",
+            "description": "Provide a demonstration of the new `itxn_next`, `gitxn`, and `gitxna`. This application will then make a series of inner transaction group transactions, making payments to provided accounts and calling foreign applications with multiple accounts in the accounts array.",
+            "args": [
+                {
+                    "type": "account",
+                    "desc": "Account 1 to send payments to."
+                },
+                {
+                    "type": "account",
+                    "desc": "Account 2 to send payments to."
+                },
+                {
+                    "type": "application",
+                    "desc": "Application to call with account array data."
+                }
+            ],
+            "returns": {}
+        }
+    ]
+}

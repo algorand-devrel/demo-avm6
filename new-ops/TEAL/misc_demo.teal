@@ -1,8 +1,10 @@
 #pragma version 6
 
+// Deploy contract for the first time.
 txn ApplicationID
 bz handle_setup
 
+// ARC-0004 ABI compliant method handlers.
 method "opcode_budget_demo()uint64"
 txn ApplicationArgs 0
 ==
@@ -66,20 +68,16 @@ opcode_budget_demo:
 bsqrt_demo:
 	txn ApplicationArgs 1
 	bsqrt
-	dup
-	len
-	itob
-	extract 6 2
-	swap
-	concat
 
 	byte 0x151f7c75 // SHA512/215 of "return"
 	swap
+	concat
 	log
 
 	int 1
 	return
 
+// Allow only deployer to update or delete the application.
 handle_update_or_delete:
 	txn Sender
 	global CreatorAddress

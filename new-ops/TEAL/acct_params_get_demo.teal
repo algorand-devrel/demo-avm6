@@ -1,9 +1,12 @@
 #pragma version 6
 
+// Deploy contract for the first time.
 txn ApplicationID
 bz handle_setup
 
-// Typical "handler" routine. (Note: This doesn't conform to ARC-0004)
+// Handler routines. 
+// Note: These are called bare application calls in ARC-0004, since they do not
+// use methods.
 txn OnCompletion
 int NoOp
 ==

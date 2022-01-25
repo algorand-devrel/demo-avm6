@@ -1,9 +1,15 @@
 #pragma version 6
 
+// Deploy contract for the first time.
 txn ApplicationID
 bz handle_setup
 
-// Typical "handler" routine. (Note: This doesn't conform to ARC-0004)
+method "gitxn_demo(account,account,application)void"
+txn ApplicationArgs 0
+==
+bnz handle_gitxn_demo
+
+// Typical "handler" routine.
 txn OnCompletion
 int UpdateApplication
 ==
@@ -12,11 +18,6 @@ int DeleteApplication
 ==
 ||
 bnz handle_update_or_delete
-
-txn OnCompletion
-int NoOp
-==
-bnz handle_noop
 
 err
 
@@ -39,7 +40,7 @@ handle_update_or_delete:
 // separate group transactions.
 // Then an application call will be made to the given application ID, where the
 // original sender and the two additional accounts are passed as accounts.
-handle_noop:
+handle_gitxn_demo:
 	// Two Accounts must be provided.
 	int 2
 	txn NumAccounts
