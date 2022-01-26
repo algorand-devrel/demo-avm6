@@ -33,8 +33,11 @@ def demo():
         # Create app
         fund_proxy_app = create_app(addr, pk)
         fund_app_addr = logic.get_application_address(fund_proxy_app)
-        print("Created Funding App with id: {} and address: {}".format(fund_proxy_app, fund_app_addr))
-
+        print(
+            "Created Funding App with id: {} and address: {}".format(
+                fund_proxy_app, fund_app_addr
+            )
+        )
 
         # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
         sp = client.suggested_params()
@@ -131,6 +134,7 @@ def create_app(addr, pk):
 
 def get_contract_from_json():
     import os
+
     path = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(path, "contract.json")) as f:
         js = f.read()

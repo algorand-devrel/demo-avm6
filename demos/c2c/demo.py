@@ -122,6 +122,7 @@ def create_app(addr, pk):
 def get_contract_from_json():
 
     import os
+
     path = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(path, "contract.json")) as f:
         js = f.read()

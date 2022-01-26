@@ -35,7 +35,7 @@ def call():
         ),
         InnerTxnBuilder.Submit(),
         # Get the first log from the last inner transaction
-        rest(
+        Suffix(
             InnerTxn.logs[0], Int(6)
         ),  # Trim off return (4 bytes) Trim off string length (2 bytes)
     )
