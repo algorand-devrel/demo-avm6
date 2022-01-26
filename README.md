@@ -72,13 +72,13 @@ demo.py - contains python logic to create the applications and call them
 sandbox.py - utility to get all the accounts from `unencrypted-default-wallet`
 contract.json - json file describing the ABI for the contracts
 
-# Gas up
+# Op up
 
 NEED MORE POWER
 
 While evaluating a contract, different code paths may require additional ops to complete successfully. This demo shows a way to check the current budget and request additional buget in the form of an application call transaction.
 
-## gas up files
+## op up files
 
 app.py  - contains approval and clear programs in pyteal
 demo.py - contains python logic to create the applications and call them
