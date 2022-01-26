@@ -4,10 +4,10 @@ from algosdk.atomic_transaction_composer import *
 from algosdk.abi import *
 from algosdk.v2client import algod
 from algosdk.future.transaction import *
-from sandbox import get_accounts
 import base64
 
-from app import get_approval, get_clear
+from .app import get_approval, get_clear
+from ..utils import get_accounts
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
@@ -32,11 +32,9 @@ def demo():
     try:
         # Create app
         fund_proxy_app = create_app(addr, pk)
-        print("Created Funding App with id: {}".format(fund_proxy_app))
-
         fund_app_addr = logic.get_application_address(fund_proxy_app)
+        print("Created Funding App with id: {} and address: {}".format(fund_proxy_app, fund_app_addr))
 
-        signer = AccountTransactionSigner(pk)
 
         # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
         sp = client.suggested_params()
@@ -45,6 +43,7 @@ def demo():
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
 
+        signer = AccountTransactionSigner(pk)
         # Get app create for app we want to make
         atc.add_transaction(TransactionWithSigner(get_app_create_txn(addr), signer))
         # Add payment to pre-created app
@@ -56,6 +55,7 @@ def demo():
 
         # run the transaction and wait for the restuls
         result = atc.execute(client, 4)
+        print(result)
 
         funded_app_id = client.pending_transaction_info(result.tx_ids[0])[
             "application-index"
@@ -69,7 +69,7 @@ def demo():
             )
         )
     except Exception as e:
-        print("Failzore: {}".format(e.with_traceback))
+        print("Failzore: {}".format(e.with_traceback()))
     finally:
         delete_app(fund_proxy_app, addr, pk)
         print("Deleted {}".format(fund_proxy_app))
@@ -130,7 +130,9 @@ def create_app(addr, pk):
 
 
 def get_contract_from_json():
-    with open("contract.json") as f:
+    import os
+    path = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(path, "contract.json")) as f:
         js = f.read()
 
     return Contract.from_json(js)

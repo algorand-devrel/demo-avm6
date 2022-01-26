@@ -3,11 +3,11 @@ from algosdk.atomic_transaction_composer import *
 from algosdk.abi import *
 from algosdk.v2client import algod
 from algosdk.future.transaction import *
-from sandbox import get_accounts
 import base64
 import os
 
-from app import get_approval, get_clear
+from .app import get_approval, get_clear
+from ..utils import get_accounts
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
@@ -120,7 +120,10 @@ def create_app(addr, pk):
 
 
 def get_contract_from_json():
-    with open("contract.json") as f:
+
+    import os
+    path = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(path, "contract.json")) as f:
         js = f.read()
 
     return Contract.from_json(js)

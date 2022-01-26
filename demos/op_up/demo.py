@@ -4,10 +4,10 @@ from algosdk.atomic_transaction_composer import *
 from algosdk.abi import *
 from algosdk.v2client import algod
 from algosdk.future.transaction import *
-from sandbox import get_accounts
 import base64
 
-from app import get_approval, get_clear, get_reup
+from .app import get_approval, get_clear, get_reup
+from ..utils import get_accounts
 
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
