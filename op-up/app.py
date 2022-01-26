@@ -20,11 +20,11 @@ def compute():
     iter = i.store(i.load() + Int(1))
 
     return Seq(
-        Pop(max_gas()),
+        Pop(max_ops()),
         (hash := ScratchVar()).store(Txn.application_args[0]),
         For(init, cond, iter).Do(
             # Do something interesting with the thicc budget
-            # should be >173k ops available if we called with 15 total app call txns that all gassed up
+            # should be >173k ops available if we called with 15 total app call txns that all op-up
             # sha256 is 35 ops so we should be able to do it ~4k times but for loop takes ops too, so we use 3500
             hash.store(Sha256(hash.load())),
         ),
@@ -34,8 +34,8 @@ def compute():
 
 
 @Subroutine(TealType.uint64)
-def max_gas():
-    """Call gasup the max number of times for a single application"""
+def max_ops():
+    """Call the max number app call txns for a single application"""
     max_txns = 256
     i = ScratchVar()
     init = i.store(Int(0))
@@ -61,7 +61,7 @@ def max_gas():
 
 
 @Subroutine(TealType.none)
-def gasup_destroy(id: TealType.uint64):
+def opup_destroy(id: TealType.uint64):
     return Seq(
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields(
@@ -77,7 +77,7 @@ def gasup_destroy(id: TealType.uint64):
 
 
 @Subroutine(TealType.uint64)
-def gasup_create():
+def opup_create():
     return Seq(
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields(
@@ -95,11 +95,11 @@ def gasup_create():
 
 
 @Subroutine(TealType.none)
-def check_gasup(min: TealType.uint64):
-    """check_gasup takes a min value, if the current opcode budget remaining is less than that, make app call to gas up"""
+def check_opup(min: TealType.uint64):
+    """check_opup takes a min value, if the current opcode budget remaining is less than that, make app call to op up"""
     return If(
         Global.opcode_budget() < min,
-        Seq(InnerTxnBuilder.Begin(), gasup_create(), InnerTxnBuilder.Submit()),
+        Seq(InnerTxnBuilder.Begin(), opup_create(), InnerTxnBuilder.Submit()),
     )
 
 
@@ -118,7 +118,7 @@ def approval():
         [Txn.on_completion() == OnComplete.OptIn, Approve()],
         [
             Txn.on_completion() == OnComplete.NoOp,
-            Return(If(Txn.application_args.length() > Int(0), compute(), max_gas())),
+            Return(If(Txn.application_args.length() > Int(0), compute(), max_ops())),
         ],
     )
 

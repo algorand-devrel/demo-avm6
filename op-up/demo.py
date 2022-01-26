@@ -55,10 +55,6 @@ def demo():
         stxns = [txn.sign(pk) for txn in assign_group_id([ptxn, actxn])]
         ids = [s.transaction.get_txid() for s in stxns]
 
-        drr = create_dryrun(client, stxns)
-        with open("gasup.msgp", "wb") as f:
-            f.write(base64.b64decode(encoding.msgpack_encode(drr)))
-
         hash = tohash.encode()
         for _ in range(times):
             hash = sha256(hash).digest()
