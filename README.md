@@ -24,8 +24,13 @@ pip install -r requirements.txt
 
 to install the python requirements
 
-With the sandbox running and the requirements in place, you should be able to cd to a demo directory and run  `python demo.py` 
+With the sandbox running and the venv requirements in place, you should be able to run:
 
+```
+python -m demos.c2c.demo
+```
+
+replace `c2c` with the directory name for the app you'd like to 
 
 # C2C 
 
@@ -37,7 +42,6 @@ Simple example of calling one app from another using an inner transaction create
 
 app.py  - contains approval and clear programs in pyteal
 demo.py - contains python logic to create the applications and call them
-sandbox.py - utility to get all the accounts from `unencrypted-default-wallet`
 contract.json - json file describing the ABI for the contracts
 
 # Trampoline
@@ -52,7 +56,6 @@ This is especially useful in the case that an application creator wants to creat
 
 app.py  - contains approval and clear programs in pyteal
 demo.py - contains python logic to create the applications and call them
-sandbox.py - utility to get all the accounts from `unencrypted-default-wallet`
 contract.json - json file describing the ABI for the contracts
 
 # New Ops
@@ -69,7 +72,6 @@ gloadss - Get the scratch space of a transaction in the current group
 
 app.py  - contains approval and clear programs in pyteal
 demo.py - contains python logic to create the applications and call them
-sandbox.py - utility to get all the accounts from `unencrypted-default-wallet`
 contract.json - json file describing the ABI for the contracts
 
 # Op up
@@ -82,7 +84,6 @@ While evaluating a contract, different code paths may require additional ops to 
 
 app.py  - contains approval and clear programs in pyteal
 demo.py - contains python logic to create the applications and call them
-sandbox.py - utility to get all the accounts from `unencrypted-default-wallet`
 contract.json - json file describing the ABI for the contracts
 
 
