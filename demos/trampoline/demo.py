@@ -11,6 +11,7 @@ from ..utils import get_accounts, create_app, delete_app
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
+
 def demo():
     # Create acct
     addr, pk = get_accounts()[0]
@@ -23,7 +24,9 @@ def demo():
 
     try:
         # Create app
-        fund_proxy_app = create_app(client, addr, pk, get_approval=get_approval, get_clear=get_clear)
+        fund_proxy_app = create_app(
+            client, addr, pk, get_approval=get_approval, get_clear=get_clear
+        )
         fund_app_addr = logic.get_application_address(fund_proxy_app)
         print(
             "Created Funding App with id: {} and address: {}".format(
@@ -57,12 +60,11 @@ def demo():
         app_create_txn = client.pending_transaction_info(result.tx_ids[0])
         app_fund_txn = client.pending_transaction_info(result.tx_ids[-1])
 
-
         funded_app_id = app_create_txn["application-index"]
         print("Created new application: {}".format(funded_app_id))
         print(
             "Funded app with inner transaction with inner transaction: {}".format(
-                app_fund_txn["inner-txns"][0][ "txn" ]
+                app_fund_txn["inner-txns"][0]["txn"]
             )
         )
 
@@ -101,6 +103,7 @@ def get_method(c: Contract, name: str) -> Method:
         if m.name == name:
             return m
     raise Exception("No method with the name {}".format(name))
+
 
 def get_contract_from_json():
     import os

@@ -9,6 +9,7 @@ from ..utils import get_accounts, create_app, delete_app
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
+
 def demo():
     # Create acct
     addr, pk = get_accounts()[0]
@@ -19,18 +20,22 @@ def demo():
 
     try:
         # Create app
-        first_app_id = create_app(client, addr, pk, get_approval=get_approval, get_clear=get_clear)
+        first_app_id = create_app(
+            client, addr, pk, get_approval=get_approval, get_clear=get_clear
+        )
         print("Created App with id: {}".format(first_app_id))
 
         # Create app
-        second_app_id = create_app(client, addr, pk, get_approval=get_approval, get_clear=get_clear)
+        second_app_id = create_app(
+            client, addr, pk, get_approval=get_approval, get_clear=get_clear
+        )
         print("Created App with id: {}".format(second_app_id))
 
         signer = AccountTransactionSigner(pk)
 
         # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
         sp = client.suggested_params()
-        sp.fee = sp.min_fee * 2
+        sp.fee = sp.min_fee * 3
 
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
@@ -48,8 +53,7 @@ def demo():
 
         # Print out the result
         print(
-            """Result of inner app call: 
-        {}""".format(
+            """Result of inner app call: {}""".format(
                 result.abi_results[0].return_value
             )
         )
@@ -65,6 +69,7 @@ def get_method(c: Contract, name: str) -> Method:
         if m.name == name:
             return m
     raise Exception("No method with the name {}".format(name))
+
 
 def get_contract_from_json():
     import os

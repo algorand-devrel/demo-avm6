@@ -3,7 +3,9 @@ from algosdk import algod
 from algosdk.future.transaction import *
 
 
-def create_app(client: algod.AlgodClient, addr: str, pk: str, get_approval, get_clear)->int:
+def create_app(
+    client: algod.AlgodClient, addr: str, pk: str, get_approval, get_clear
+) -> int:
     # Get suggested params from network
     sp = client.suggested_params()
 
@@ -40,7 +42,8 @@ def create_app(client: algod.AlgodClient, addr: str, pk: str, get_approval, get_
 
     return result["application-index"]
 
-def delete_app(client: algod.AlgodClient, app_id: int, addr: str, pk:str):
+
+def delete_app(client: algod.AlgodClient, app_id: int, addr: str, pk: str):
     # Get suggested params from network
     sp = client.suggested_params()
 

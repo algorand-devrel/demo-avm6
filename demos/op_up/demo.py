@@ -13,6 +13,7 @@ from ..utils import get_accounts, create_app, delete_app
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
+
 def demo():
     # Create acct
     addr, pk = get_accounts()[1]
@@ -21,12 +22,16 @@ def demo():
     # Read in the json contract description and create a Contract object
     try:
         # Create app
-        app_id = create_app(client, addr, pk, get_approval=get_approval, get_clear=get_clear)
+        app_id = create_app(
+            client, addr, pk, get_approval=get_approval, get_clear=get_clear
+        )
         app_addr = logic.get_application_address(app_id)
         print("Created App with id: {} and address {}".format(app_id, app_addr))
 
         # Create dummy app we just use to call against for more ops
-        second_app = create_app(client, addr, pk, get_approval=get_reup, get_clear=get_clear)
+        second_app = create_app(
+            client, addr, pk, get_approval=get_reup, get_clear=get_clear
+        )
         print("Created Reup App with id: {}".format(second_app))
 
         sp = client.suggested_params()
@@ -46,7 +51,7 @@ def demo():
         )
 
         # We call 256 inners but also need to pay for this 1 outer
-        actxn.fee = actxn.fee * (256 + 1) 
+        actxn.fee = actxn.fee * (256 + 1)
 
         # Pay the app address so we can execute calls
         ptxn = PaymentTxn(addr, sp, app_addr, int(1e9))
@@ -66,7 +71,7 @@ def demo():
 
         results = [wait_for_confirmation(client, id, 4) for id in ids]
         print("Got: {}".format(get_logs_recursive(results)[0]))
-        
+
     except Exception as e:
         print("Fail :( {}".format(e.with_traceback()))
     finally:

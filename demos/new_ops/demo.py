@@ -10,6 +10,7 @@ from ..utils import get_accounts, create_app, delete_app
 
 client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
+
 def demo():
 
     accts = get_accounts()
@@ -25,7 +26,9 @@ def demo():
 
     try:
         # Create app
-        app_id = create_app(client, addr, pk, get_approval=get_approval, get_clear=get_clear)
+        app_id = create_app(
+            client, addr, pk, get_approval=get_approval, get_clear=get_clear
+        )
         app_addr = logic.get_application_address(app_id)
         print("Created App with id: {} and address: {}".format(app_id, app_addr))
 
@@ -78,6 +81,7 @@ def get_method(c: Contract, name: str) -> Method:
         if m.name == name:
             return m
     raise Exception("No method with the name {}".format(name))
+
 
 def get_contract_from_json():
     import os
