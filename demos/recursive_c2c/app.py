@@ -28,7 +28,7 @@ def replicate():
                 InnerTxnBuilder.SetFields({
                     TxnField.type_enum: TxnType.Payment,
                     TxnField.receiver: Sha512_256(Concat(Bytes("appID"), Itob(InnerTxn.created_application_id()))),
-                    TxnField.amount: my_balance.value()/Int(8),
+                    TxnField.amount: my_balance.value() - Int(1_000_000),
                     TxnField.fee: Int(0),
                 }),
                 InnerTxnBuilder.Next(),

@@ -57,7 +57,7 @@ def demo():
         sp = client.suggested_params()
 
         # Pay the app addr
-        pay_txn = PaymentTxn(addr, sp, app_addr, int(1e15))
+        pay_txn = PaymentTxn(addr, sp, app_addr, int(1e9))
 
         # Call it
         call_txn = ApplicationCallTxn(
