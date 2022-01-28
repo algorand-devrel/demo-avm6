@@ -26,11 +26,17 @@ to install the python requirements
 
 With the sandbox running and the venv requirements in place, you should be able to run:
 
-```
+```sh
 python -m demos.c2c.demo
+# or
+python -m demos.recusive_c2c.demo
+# or
+python -m demos.new_ops.demo
+# or
+python -m demos.op_up.demo
+# or
+python -m demos.trampoline.demo
 ```
-
-replace `c2c` with the directory name for the app you'd like to 
 
 # C2C 
 
