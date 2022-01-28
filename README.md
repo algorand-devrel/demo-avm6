@@ -29,7 +29,7 @@ With the sandbox running and the venv requirements in place, you should be able 
 ```sh
 python -m demos.c2c.demo
 # or
-python -m demos.recusive_c2c.demo
+python -m demos.c2c_max_depth.demo
 # or
 python -m demos.new_ops.demo
 # or
