@@ -9,15 +9,7 @@ import base64
 from .app import get_approval, get_clear
 from ..utils import get_accounts
 
-
 client = algod.AlgodClient("a"*64, "http://localhost:4001")
-
-def get_method(c: Contract, name: str) -> Method:
-    for m in c.methods:
-        if m.name == name:
-            return m
-    raise Exception("No method with the name {}".format(name))
-
 
 def demo():
     # Create acct
@@ -53,6 +45,8 @@ def demo():
         app_addr = logic.get_application_address(app_id)
 
 
+        depth = 8
+
         # Get suggested params from network
         sp = client.suggested_params()
 
@@ -61,17 +55,19 @@ def demo():
 
         # Call it
         call_txn = ApplicationCallTxn(
-            addr, sp, app_id, OnComplete.DeleteApplicationOC, app_args=[8]
+            addr, sp, app_id, OnComplete.DeleteApplicationOC, app_args=[depth]
         )
-        call_txn.fee *= 257
+
+        # Cover $depth inner app creates, pays, calls + this call
+        call_txn.fee *= (depth * 3) + 1 
 
         stxn = [tx.sign(pk) for tx in assign_group_id([pay_txn, call_txn])]
         ids = [tx.get_txid() for tx in stxn]
 
         client.send_transactions(stxn)
-
         results = [wait_for_confirmation(client, txid, 2) for txid in ids]
 
+        # Print the logs from all the inners
         print_logs_recursive(results)
             
     except Exception as e:
@@ -85,12 +81,6 @@ def print_logs_recursive(results, nested_level: int = 0):
                 print("At level {}: {}".format(nested_level, l.hex()))
         if "inner-txns" in res:
             print_logs_recursive(res["inner-txns"], nested_level + 1)
-            
-def get_contract_from_json():
-    with open("contract.json") as f:
-        js = f.read()
-
-    return Contract.from_json(js)
 
 if __name__ == "__main__":
     demo()
