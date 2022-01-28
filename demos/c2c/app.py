@@ -34,9 +34,12 @@ def call():
             }
         ),
         InnerTxnBuilder.Submit(),
-        # Get the first log from the last inner transaction
         Suffix(
-            InnerTxn.logs[0], Int(6)
+            # Get the 'return value' from the logs of the last inner txn
+            InnerTxn.logs[0],
+            Int(
+                6
+            ),  # TODO: last_log should give us the real last logged message, not in pyteal yet
         ),  # Trim off return (4 bytes) Trim off string length (2 bytes)
     )
 

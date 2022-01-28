@@ -74,7 +74,6 @@ def demo():
     finally:
         delete_app(client, fund_proxy_app, addr, pk)
         print("Deleted {}".format(fund_proxy_app))
-
         delete_app(client, funded_app_id, addr, pk)
         print("Deleted {}".format(funded_app_id))
 

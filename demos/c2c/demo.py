@@ -23,13 +23,21 @@ def demo():
         first_app_id = create_app(
             client, addr, pk, get_approval=get_approval, get_clear=get_clear
         )
-        print("Created App with id: {}".format(first_app_id))
+        print(
+            "Created App with id: {} {}".format(
+                first_app_id, logic.get_application_address(first_app_id)
+            )
+        )
 
         # Create app
         second_app_id = create_app(
             client, addr, pk, get_approval=get_approval, get_clear=get_clear
         )
-        print("Created App with id: {}".format(second_app_id))
+        print(
+            "Created App with id: {} {}".format(
+                second_app_id, logic.get_application_address(second_app_id)
+            )
+        )
 
         signer = AccountTransactionSigner(pk)
 
