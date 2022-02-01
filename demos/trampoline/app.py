@@ -9,6 +9,7 @@ prefix = Bytes("base16", "151f7c75")
 
 fund_selector = MethodSignature("fund()void")
 
+min_bal = Int(int(1e5))
 # This method is called by an account that wishes to fund another app address
 # it ensures the group transaction is structured properly then pays the app address the same amount it was sent in the payment
 @Subroutine(TealType.none)
@@ -20,7 +21,7 @@ def fund():
         app_create.on_completion() == OnComplete.NoOp,
         app_create.application_id() == Int(0),
         pay.type_enum() == TxnType.Payment,
-        pay.amount() > Int(100000),  # min bal of 0.1A
+        pay.amount() > min_bal,  # min bal of 0.1A
         pay.close_remainder_to() == Global.zero_address(),
         pay_proxy.type_enum() == TxnType.ApplicationCall,
         pay_proxy.on_completion() == OnComplete.NoOp,
@@ -39,7 +40,7 @@ def fund():
         InnerTxnBuilder.SetFields(
             {
                 TxnField.type_enum: TxnType.Payment,
-                TxnField.amount: pay.amount(),
+                TxnField.amount: min_bal,
                 TxnField.receiver: created_addr,
                 TxnField.fee: Int(0),  # make caller pay
             }

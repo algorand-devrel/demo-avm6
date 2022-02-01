@@ -23,21 +23,33 @@ def demo():
         first_app_id = create_app(
             client, addr, pk, get_approval=get_approval, get_clear=get_clear
         )
+        first_addr = logic.get_application_address(first_app_id)
         print(
-            "Created App with id: {} {}".format(
-                first_app_id, logic.get_application_address(first_app_id)
-            )
+            "Created App with id: {} {}".format( first_app_id, first_addr)
         )
 
         # Create app
         second_app_id = create_app(
             client, addr, pk, get_approval=get_approval, get_clear=get_clear
         )
+        second_addr = logic.get_application_address(second_app_id)
         print(
             "Created App with id: {} {}".format(
-                second_app_id, logic.get_application_address(second_app_id)
+                second_app_id, second_addr
             )
         )
+
+
+        # This may be possible to take out with some possible changes coming to who is 
+        # allowed to issue transactions
+        sp = client.suggested_params()
+        p1 = PaymentTxn(addr, sp, first_addr, int(1e6))
+        p2 = PaymentTxn(addr, sp, second_addr, int(1e6))
+        stxns = [txn.sign(pk) for txn in assign_group_id([p1,p2])]
+        txid = client.send_transactions(stxns)
+        wait_for_confirmation(client, txid, 2)
+
+
 
         signer = AccountTransactionSigner(pk)
 
