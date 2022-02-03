@@ -2,7 +2,7 @@ import os
 
 from pyteal import *
 from pytealutils.inline import InlineAssembly
-from pytealutils.strings import itoa, rest
+from pytealutils.strings import itoa
 
 # This may be provided as a constant in pyteal, for now just hardcode
 prefix = Bytes("base16", "151f7c75")
@@ -57,13 +57,13 @@ def echo():
 
 # Util to add length to string to make it abi compliant, will have better interface in pyteal
 @Subroutine(TealType.bytes)
-def string_encode(str: TealType.bytes):
+def string_encode(str: Expr):
     return Concat(Extract(Itob(Len(str)), Int(6), Int(2)), str)
 
 
 # Util to log bytes with return prefix
 @Subroutine(TealType.none)
-def ret_log(value: TealType.bytes):
+def ret_log(value: Expr):
     return Log(Concat(prefix, string_encode(value)))
 
 

@@ -61,7 +61,7 @@ def max_ops():
 
 
 @Subroutine(TealType.none)
-def opup_destroy(id: TealType.uint64):
+def opup_destroy(id):
     return Seq(
         InnerTxnBuilder.Begin(),
         InnerTxnBuilder.SetFields(
@@ -95,7 +95,7 @@ def opup_create():
 
 
 @Subroutine(TealType.none)
-def check_opup(min: TealType.uint64):
+def check_opup(min):
     """check_opup takes a min value, if the current opcode budget remaining is less than that, make app call to op up"""
     return If(
         Global.opcode_budget() < min,

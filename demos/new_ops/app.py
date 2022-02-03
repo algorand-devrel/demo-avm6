@@ -80,19 +80,19 @@ def bsqrt():
 
 # Util to add length to string to make it abi compliant, will have better interface in pyteal
 @Subroutine(TealType.bytes)
-def string_encode(str: TealType.bytes):
+def string_encode(str):
     return Concat(Extract(Itob(Len(str)), Int(6), Int(2)), str)
 
 
 # Util to log bytes with return prefix
 @Subroutine(TealType.none)
-def return_string(value: TealType.bytes):
+def return_string(value):
     return Log(Concat(prefix, string_encode(value)))
 
 
 # Util to log bytes with return prefix
 @Subroutine(TealType.none)
-def return_any(value: TealType.bytes):
+def return_any(value):
     return Log(Concat(prefix, value))
 
 
