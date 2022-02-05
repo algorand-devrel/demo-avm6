@@ -46,9 +46,21 @@ Simple example of calling one app from another using an inner transaction create
 
 ## c2c files
 
-app.py  - contains approval and clear programs in pyteal
-demo.py - contains python logic to create the applications and call them
-contract.json - json file describing the ABI for the contracts
+    app.py  - contains approval and clear programs in pyteal
+    demo.py - contains python logic to create the applications and call them
+    contract.json - json file describing the ABI for the contracts
+
+
+# C2C Max Depth
+
+Useless example that shows the max depth limitation of 8 inner app calls.
+
+
+## c2c max depth files
+
+    app.py  - contains approval and clear programs in pyteal
+    demo.py - contains python logic to create the applications and call them
+
 
 # Trampoline
 
@@ -60,25 +72,25 @@ This is especially useful in the case that an application creator wants to creat
 
 ## trampoline files
 
-app.py  - contains approval and clear programs in pyteal
-demo.py - contains python logic to create the applications and call them
-contract.json - json file describing the ABI for the contracts
+    app.py  - contains approval and clear programs in pyteal
+    demo.py - contains python logic to create the applications and call them
+    contract.json - json file describing the ABI for the contracts
 
 # New Ops
 
 Demonstate how to use the newly available opcodes
 
-current opcode budget - Get the remaining budget for a currently evaluating contract
-caller app id / app address - Get the app id or address for the application that called "me" from an inner txn
-bsqrt - Take the square root of a large number (represented as big endian bytes)
-gitxn / gitxna - Get the fields from the transactions of the last inner group transaction
-gloadss - Get the scratch space of a transaction in the current group
+    - current opcode budget - Get the remaining budget for a currently evaluating contract
+    - caller app id / app address - Get the app id or address for the application that called "me" from an inner txn
+    - bsqrt - Take the square root of a large number (represented as big endian bytes)
+    - gitxn / gitxna - Get the fields from the transactions of the last inner group transaction
+    - gloadss - Get the scratch space of a transaction in the current group
 
 ## new ops files
 
-app.py  - contains approval and clear programs in pyteal
-demo.py - contains python logic to create the applications and call them
-contract.json - json file describing the ABI for the contracts
+    app.py  - contains approval and clear programs in pyteal
+    demo.py - contains python logic to create the applications and call them
+    contract.json - json file describing the ABI for the contracts
 
 # Op up
 
@@ -88,9 +100,9 @@ While evaluating a contract, different code paths may require additional ops to 
 
 ## op up files
 
-app.py  - contains approval and clear programs in pyteal
-demo.py - contains python logic to create the applications and call them
-contract.json - json file describing the ABI for the contracts
+    app.py  - contains approval and clear programs in pyteal
+    demo.py - contains python logic to create the applications and call them
+    contract.json - json file describing the ABI for the contracts
 
 
 
