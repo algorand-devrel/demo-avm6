@@ -140,7 +140,7 @@ def get_approval():
 
 
 def get_clear():
-    return compileTeal(clear(), mode=Mode.Application, version=5)
+    return compileTeal(clear(), mode=Mode.Application, version=6)
 
 
 if __name__ == "__main__":
