@@ -4,13 +4,9 @@ Demo for AVM 1.1 features
 
 ## Sandbox 
 
-These demos require sandbox to be running with this feature branch: https://github.com/algorand/go-algorand/tree/feature/contract-to-contract
+A sandbox running `master` branch with a NETWORK_TEMPLATE setting that has its ConsensusProtocol set to `future` must be used.
 
-This can be done by setting the ALGOD_BRANCH in your config.* to `feature/contract-to-contract` and make sure the network template protocol version is `future`
-```sh
-export ALGOD_BRANCH="feature/contract-to-contract"
-```
-
+The provided `config.dev` will suite this need, `./sandbox up dev` to start it (you may need to sandbox down/sandbox clean first)
 
 ## Python Requirements
 
