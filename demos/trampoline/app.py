@@ -11,7 +11,7 @@ fund_selector = MethodSignature("fund()void")
 
 min_bal = Int(int(1e5))
 # This method is called by an account that wishes to fund another app address
-# it ensures the group transaction is structured properly then pays the app address the same amount it was sent in the payment
+# it ensures the group transaction is structured properly then pays the new app address enough to cover the min balance 
 @Subroutine(TealType.none)
 def fund():
     app_create, pay, pay_proxy = Gtxn[0], Gtxn[1], Gtxn[2]
@@ -29,11 +29,10 @@ def fund():
     )
 
     # Compute the newly created app address from the app id
-    created_addr = Sha512_256(
-        Concat(Bytes("appID"), Itob(app_create.created_application_id()))
-    )
+    addr = AppParam.address(app_create.created_application_id())
 
     return Seq(
+        addr,
         Assert(well_formed_fund),
         InnerTxnBuilder.Begin(),
         # Send pay transaction from trampoline app to newly created application
@@ -41,7 +40,7 @@ def fund():
             {
                 TxnField.type_enum: TxnType.Payment,
                 TxnField.amount: min_bal,
-                TxnField.receiver: created_addr,
+                TxnField.receiver: addr.value(),
                 TxnField.fee: Int(0),  # make caller pay
             }
         ),
