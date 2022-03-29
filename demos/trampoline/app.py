@@ -21,7 +21,8 @@ def fund():
         app_create.on_completion() == OnComplete.NoOp,
         app_create.application_id() == Int(0),
         pay.type_enum() == TxnType.Payment,
-        pay.amount() > min_bal,  # min bal of 0.1A
+        pay.amount() >= min_bal,  # min bal of 0.1A
+        pay.receiver() == Global.current_application_address(),
         pay.close_remainder_to() == Global.zero_address(),
         pay_proxy.type_enum() == TxnType.ApplicationCall,
         pay_proxy.on_completion() == OnComplete.NoOp,
@@ -39,7 +40,7 @@ def fund():
         InnerTxnBuilder.SetFields(
             {
                 TxnField.type_enum: TxnType.Payment,
-                TxnField.amount: min_bal,
+                TxnField.amount: pay.amount(),
                 TxnField.receiver: addr.value(),
                 TxnField.fee: Int(0),  # make caller pay
             }
