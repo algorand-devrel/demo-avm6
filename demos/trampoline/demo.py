@@ -33,10 +33,16 @@ def demo():
                 fund_proxy_app, fund_app_addr
             )
         )
-
-        # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
+        # get tx suggested params
         sp = client.suggested_params()
-        sp.fee = sp.min_fee * 3
+
+        # Fund to proxy app
+        proxy_fund_tx = PaymentTxn(addr, sp, fund_app_addr, int(1e5))
+        txid = client.send_transaction(proxy_fund_tx.sign(pk))
+        wait_for_confirmation(client, txid, 1)
+
+        # set the fee to 4x min fee, user will cover all fee
+        sp.fee = sp.min_fee * 4
 
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
