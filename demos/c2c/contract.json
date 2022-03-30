@@ -9,13 +9,13 @@
         {
             "name":"call",
             "desc":"Proxy a call to another app",
-            "args":[ { "type":"application" }],
+            "args":[ { "type":"application" }, {"type":"account"}],
             "returns": {"type":"string"}
         },
         {
             "name":"echo",
             "desc":"Log the current app id and the app id we were called from",
-            "args":[],
+            "args":[{"type":"account"}],
             "returns": {"type":"string"}
         }
     ]

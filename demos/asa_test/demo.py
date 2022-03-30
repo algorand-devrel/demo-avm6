@@ -12,8 +12,11 @@ client = algod.AlgodClient("a" * 64, "http://localhost:4001")
 
 def demo():
     # Create acct
-    addr, pk = get_accounts()[0]
+    accts = get_accounts()
+    addr, pk = accts[0]
     print("Using {}".format(addr))
+
+    addr2, pk2 = accts[1]
 
     # Read in the json contract description and create a Contract object
     c = get_contract_from_json()
@@ -33,13 +36,20 @@ def demo():
         second_addr = logic.get_application_address(second_app_id)
         print("Created App with id: {} {}".format(second_app_id, second_addr))
 
-
-
         sp = client.suggested_params()
-        txn = AssetConfigTxn(addr, sp, asset_name="okay", total=100, freeze=addr, clawback=addr, manager=addr, reserve=addr)
-        txnid = client.send_transactions([txn.sign(pk)])
+        txn = AssetConfigTxn(
+            addr2,
+            sp,
+            asset_name="okay",
+            total=100,
+            freeze=addr,
+            clawback=addr,
+            manager=addr,
+            reserve=addr,
+        )
+        txnid = client.send_transactions([txn.sign(pk2)])
         res = wait_for_confirmation(client, txnid, 3)
-        asa_id = res['asset-index']
+        asa_id = res["asset-index"]
 
         # This may be possible to take out with some possible changes coming to who is
         # allowed to issue transactions
@@ -65,11 +75,24 @@ def demo():
             addr,
             sp,
             signer,
-            method_args=[second_app_id, asa_id],
+            method_args=[second_app_id, 0],
         )
         # run the transaction and wait for the restuls
-        result = atc.execute(client, 4)
+        stxns = atc.gather_signatures()
 
+        drr = create_dryrun(client, stxns)
+        with open("dryrun_request.msgp", "wb") as f:
+            import base64
+
+            f.write(base64.b64decode(encoding.msgpack_encode(drr)))
+
+        dryrun_resp = client.dryrun(drr)
+        with open("dryrun_response.json", "w") as f:
+            import json
+
+            f.write(json.dumps(dryrun_resp))
+
+        result = atc.execute(client, 4)
         # Print out the result
         print(
             """Result of inner app call: {}""".format(

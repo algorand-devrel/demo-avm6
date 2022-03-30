@@ -57,22 +57,24 @@ def demo():
             addr,
             sp,
             signer,
-            method_args=[second_app_id],
+            method_args=[second_app_id, second_addr],
         )
         # run the transaction and wait for the restuls
         result = atc.execute(client, 4)
+        print(result.tx_ids)
 
         # Print out the result
         print(
             """Result of inner app call: {}""".format(
-                result.abi_results[0].return_value
+                encoding.encode_address(result.abi_results[0].raw_value[2:])
             )
         )
     except Exception as e:
         print("Fail :( {}".format(e.with_traceback()))
     finally:
-        delete_app(client, first_app_id, addr, pk)
-        delete_app(client, second_app_id, addr, pk)
+        pass
+        # delete_app(client, first_app_id, addr, pk)
+        # delete_app(client, second_app_id, addr, pk)
 
 
 def get_method(c: Contract, name: str) -> Method:

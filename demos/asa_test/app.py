@@ -49,7 +49,7 @@ def call():
 # This is called from the other application, just echos some stats
 @Subroutine(TealType.bytes)
 def echo():
-    
+
     name = AssetParam.name(Txn.assets[0])
     return Seq(
         name,
@@ -57,8 +57,8 @@ def echo():
             Bytes("In app id "),
             itoa(Txn.application_id()),
             Bytes(" which was called with asset name "),
-            name.value() 
-        )
+            name.value(),
+        ),
     )
 
 
