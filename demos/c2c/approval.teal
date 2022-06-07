@@ -1,0 +1,111 @@
+#pragma version 6
+txn NumAppArgs
+int 0
+==
+bnz main_l6
+txna ApplicationArgs 0
+method "echo(uint64)string"
+==
+bnz main_l5
+txna ApplicationArgs 0
+method "call(application)string"
+==
+bnz main_l4
+err
+main_l4:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+int 0
+getbyte
+callsub call_1
+store 2
+byte 0x151f7c75
+load 2
+concat
+log
+int 1
+return
+main_l5:
+txn OnCompletion
+int NoOp
+==
+txn ApplicationID
+int 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+btoi
+callsub echo_0
+store 0
+byte 0x151f7c75
+load 0
+concat
+log
+int 1
+return
+main_l6:
+txn OnCompletion
+int NoOp
+==
+bnz main_l8
+err
+main_l8:
+txn ApplicationID
+int 0
+==
+assert
+int 1
+return
+
+// echo
+echo_0:
+store 1
+byte "In app id "
+txn ApplicationID
+itob
+concat
+byte " which was called by app id "
+concat
+global CallerApplicationID
+itob
+concat
+len
+itob
+extract 6 0
+byte "In app id "
+txn ApplicationID
+itob
+concat
+byte " which was called by app id "
+concat
+global CallerApplicationID
+itob
+concat
+concat
+retsub
+
+// call
+call_1:
+store 3
+itxn_begin
+int appl
+itxn_field TypeEnum
+load 3
+txnas Applications
+itxn_field ApplicationID
+byte 0xd87699ef
+itxn_field ApplicationArgs
+int 0
+itxn_field Fee
+itxn_submit
+itxna Logs 0
+extract 4 0
+retsub
