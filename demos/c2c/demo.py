@@ -37,7 +37,7 @@ def demo():
         sp = client.suggested_params()
         p1 = PaymentTxn(addr, sp, first_addr, int(1e6))
         p2 = PaymentTxn(addr, sp, second_addr, int(1e6))
-        
+
         stxns = [txn.sign(pk) for txn in assign_group_id([p1, p2])]
         txid = client.send_transactions(stxns)
         wait_for_confirmation(client, txid, 2)
@@ -76,7 +76,9 @@ def demo():
         sp.fee = sp.min_fee * 3
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
-        axfer = TransactionWithSigner(txn=AssetTransferTxn(addr, sp, first_addr, 1, asset_id), signer=signer)
+        axfer = TransactionWithSigner(
+            txn=AssetTransferTxn(addr, sp, first_addr, 1, asset_id), signer=signer
+        )
         # add a method call to "call" method, pass the second app id so we can dispatch a call
         atc.add_method_call(
             first_app_id,
@@ -90,11 +92,7 @@ def demo():
         result = atc.execute(client, 4)
 
         # Print out the result
-        print(
-            """Result of inner app call: {}""".format(
-                result.abi_results[0].__dict__
-            )
-        )
+        print("""Result of inner app call: {}""".format(result.abi_results[0].__dict__))
     except Exception as e:
         print("Fail :( {}".format(e.with_traceback()))
     finally:

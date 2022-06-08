@@ -29,9 +29,9 @@ def thing(
     return Seq(
         Assert(axfer.get().asset_receiver() == Global.current_application_address()),
         Assert(app.application_id() == Global.caller_app_id()),
-        Assert(val.get()>Int(0)),
+        Assert(val.get() > Int(0)),
         Assert(acct.address() == Global.caller_app_address()),
-        stuff[0].use(lambda a: Assert(Len(a.get())==Int(32))),
+        stuff[0].use(lambda a: Assert(Len(a.get()) == Int(32))),
         output.set(
             Concat(
                 Bytes("In app id "),
@@ -39,7 +39,7 @@ def thing(
                 Bytes(" which was called by app id "),
                 Itob(Global.caller_app_id()),
             )
-        )
+        ),
     )
 
 
@@ -53,18 +53,27 @@ selector = Bytes(thingmethod.get_selector())
 def bootstrap(asset: abi.Asset):
     return Seq(
         InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields({
-            TxnField.type_enum: TxnType.AssetTransfer,
-            TxnField.xfer_asset: asset.asset_id(),
-            TxnField.asset_amount: Int(0),
-            TxnField.asset_receiver: Global.current_application_address(),
-        }),
-        InnerTxnBuilder.Submit()
+        InnerTxnBuilder.SetFields(
+            {
+                TxnField.type_enum: TxnType.AssetTransfer,
+                TxnField.xfer_asset: asset.asset_id(),
+                TxnField.asset_amount: Int(0),
+                TxnField.asset_receiver: Global.current_application_address(),
+            }
+        ),
+        InnerTxnBuilder.Submit(),
     )
 
-# This method is called from off chain, it dispatches a call to the first argument treated as an application id
+
 @router.method
-def call(axfer: abi.AssetTransferTransaction, asset: abi.Asset, app: abi.Application, app_acct: abi.Account, *, output: abi.String) -> Expr:
+def call(
+    axfer: abi.AssetTransferTransaction,
+    asset: abi.Asset,
+    app: abi.Application,
+    app_acct: abi.Account,
+    *,
+    output: abi.String,
+) -> Expr:
     return Seq(
         (val := abi.Uint64()).set(axfer.get().asset_amount()),
         (addr := abi.Address()).set(Txn.sender()),
