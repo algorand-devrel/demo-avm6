@@ -97,8 +97,8 @@ def call(
                 Global.current_application_address(),
                 stuff,
             ],
+            {TxnField.fee: Int(0)}
         ),
-        InnerTxnBuilder.SetFields({TxnField.fee: Int(0)}),
         InnerTxnBuilder.Submit(),
         output.decode(Suffix(InnerTxn.last_log(), Int(4))),
     )
