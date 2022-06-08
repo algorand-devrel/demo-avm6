@@ -7,7 +7,7 @@ router = Router(
     "c2c",
     BareCallActions(
         no_op=OnCompleteAction.create_only(Approve()),
-        clear_state=OnCompleteAction.always(Reject()),
+        clear_state=OnCompleteAction.never(),
         delete_application=OnCompleteAction.always(
             Return(Txn.sender() == Global.creator_address())
         ),
@@ -16,49 +16,82 @@ router = Router(
 
 # This is called from the other application, just echos some stats
 @router.method
-def echo(*, output: abi.String) -> Expr:
-    """Echo echos out blah"""
-    return output.set(
-        Concat(
-            Bytes("In app id "),
-            Itob(Txn.application_id()),
-            Bytes(" which was called by app id "),
-            Itob(Global.caller_app_id()),
+def thing(
+    axfer: abi.AssetTransferTransaction,
+    app: abi.Application,
+    val: abi.Uint64,
+    acct: abi.Account,
+    stuff: abi.Tuple2[abi.Address, abi.String],
+    *,
+    output: abi.String,
+) -> Expr:
+    """Super useless method"""
+    return Seq(
+        Assert(axfer.get().asset_receiver() == Global.current_application_address()),
+        Assert(app.application_id() == Global.caller_app_id()),
+        Assert(val.get()>Int(0)),
+        Assert(acct.address() == Global.caller_app_address()),
+        stuff[0].use(lambda a: Assert(Len(a.get())==Int(32))),
+        output.set(
+            Concat(
+                Bytes("In app id "),
+                Itob(Txn.application_id()),
+                Bytes(" which was called by app id "),
+                Itob(Global.caller_app_id()),
+            )
         )
     )
 
 
-# TODO: Ben can change this. Make it better.
-emeth = list(filter(lambda m: m.name == "echo", router.methods))
-selector = Bytes(emeth[0].get_selector())
+## TODO: Make this better.
+thingmethod = list(filter(lambda m: m.name == "thing", router.methods)).pop()
+signature = thingmethod.get_signature()
+selector = Bytes(thingmethod.get_selector())
+
+
+@router.method
+def bootstrap(asset: abi.Asset):
+    return Seq(
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.AssetTransfer,
+            TxnField.xfer_asset: asset.asset_id(),
+            TxnField.asset_amount: Int(0),
+            TxnField.asset_receiver: Global.current_application_address(),
+        }),
+        InnerTxnBuilder.Submit()
+    )
 
 # This method is called from off chain, it dispatches a call to the first argument treated as an application id
 @router.method
-def call(app: abi.Application, *, output: abi.String) -> Expr:
+def call(axfer: abi.AssetTransferTransaction, asset: abi.Asset, app: abi.Application, app_acct: abi.Account, *, output: abi.String) -> Expr:
     return Seq(
+        (val := abi.Uint64()).set(axfer.get().asset_amount()),
+        (addr := abi.Address()).set(Txn.sender()),
+        (s := abi.String()).set(Txn.note()),
+        (stuff := abi.make(abi.Tuple2[abi.Address, abi.String])).set(addr, s),
         InnerTxnBuilder.Begin(),
-        InnerTxnBuilder.SetFields(
-            {
-                TxnField.type_enum: TxnType.ApplicationCall,
-                # access the actual id specified by the 2nd app arg
-                TxnField.application_id: app.deref(),
-                # Pass the selector as the first arg to trigger the `echo` method
-                TxnField.application_args: [selector],
-                # Set fee to 0 so caller has to cover it
-                TxnField.fee: Int(0),
-            }
+        InnerTxnBuilder.MethodCall(
+            # App id
+            app.application_id(),
+            signature,
+            [
+                {
+                    TxnField.type_enum: TxnType.AssetTransfer,
+                    TxnField.xfer_asset: asset.asset_id(),
+                    TxnField.asset_amount: axfer.get().asset_amount(),
+                    TxnField.asset_receiver: app_acct.address(),
+                    TxnField.fee: Int(0),
+                },
+                Global.current_application_id(),
+                val,
+                Global.current_application_address(),
+                stuff,
+            ],
         ),
+        InnerTxnBuilder.SetFields({TxnField.fee: Int(0)}),
         InnerTxnBuilder.Submit(),
-        (s := abi.String()).decode(
-            Suffix(
-                # Get the 'return value' from the logs of the last inner txn
-                InnerTxn.logs[0],
-                Int(
-                    4
-                ),  # TODO: last_log should give us the real last logged message, not in pyteal yet
-            ),  # Trim off return (4 bytes) Trim off string length (2 bytes)
-        ),
-        output.set(s),
+        output.decode(Suffix(InnerTxn.last_log(), Int(4))),
     )
 
 

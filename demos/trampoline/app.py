@@ -11,7 +11,7 @@ fund_selector = MethodSignature("fund()void")
 
 min_bal = Int(int(1e5))
 # This method is called by an account that wishes to fund another app address
-# it ensures the group transaction is structured properly then pays the new app address enough to cover the min balance 
+# it ensures the group transaction is structured properly then pays the new app address enough to cover the min balance
 @Subroutine(TealType.none)
 def fund():
     app_create, pay, pay_proxy = Gtxn[0], Gtxn[1], Gtxn[2]

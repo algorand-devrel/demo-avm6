@@ -33,23 +33,50 @@ def demo():
         second_addr = logic.get_application_address(second_app_id)
         print("Created App with id: {} {}".format(second_app_id, second_addr))
 
-        # This may be possible to take out with some possible changes coming to who is
-        # allowed to issue transactions
+        # Fund the app addresses
         sp = client.suggested_params()
         p1 = PaymentTxn(addr, sp, first_addr, int(1e6))
         p2 = PaymentTxn(addr, sp, second_addr, int(1e6))
+        
         stxns = [txn.sign(pk) for txn in assign_group_id([p1, p2])]
         txid = client.send_transactions(stxns)
         wait_for_confirmation(client, txid, 2)
 
+        # Make the signer
         signer = AccountTransactionSigner(pk)
 
         # set the fee to 2x min fee, this allows the inner app call to proceed even though the app address is not funded
         sp = client.suggested_params()
         sp.fee = sp.min_fee * 3
 
+        asset_id = 2161
+
+        atc = AtomicTransactionComposer()
+        # add a method call to "call" method, pass the second app id so we can dispatch a call
+        atc.add_method_call(
+            first_app_id,
+            get_method(c, "bootstrap"),
+            addr,
+            sp,
+            signer,
+            method_args=[asset_id],
+        )
+        atc.add_method_call(
+            second_app_id,
+            get_method(c, "bootstrap"),
+            addr,
+            sp,
+            signer,
+            method_args=[asset_id],
+        )
+        # run the transaction and wait for the restuls
+        result = atc.execute(client, 4)
+
+        sp = client.suggested_params()
+        sp.fee = sp.min_fee * 3
         # Create atc to handle method calling for us
         atc = AtomicTransactionComposer()
+        axfer = TransactionWithSigner(txn=AssetTransferTxn(addr, sp, first_addr, 1, asset_id), signer=signer)
         # add a method call to "call" method, pass the second app id so we can dispatch a call
         atc.add_method_call(
             first_app_id,
@@ -57,7 +84,7 @@ def demo():
             addr,
             sp,
             signer,
-            method_args=[second_app_id],
+            method_args=[axfer, asset_id, second_app_id, second_addr],
         )
         # run the transaction and wait for the restuls
         result = atc.execute(client, 4)
@@ -65,7 +92,7 @@ def demo():
         # Print out the result
         print(
             """Result of inner app call: {}""".format(
-                result.abi_results[0].return_value
+                result.abi_results[0].__dict__
             )
         )
     except Exception as e:

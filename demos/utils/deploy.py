@@ -59,11 +59,9 @@ def delete_app(client: algod.AlgodClient, app_id: int, addr: str, pk: str):
     return wait_for_confirmation(client, txid, 4)
 
 
-def destroy_apps(client: algod.AlgodClient, addr: str, pk:str):
+def destroy_apps(client: algod.AlgodClient, addr: str, pk: str):
     acct = client.account_info(addr)
 
     # Delete all apps created by this account
-    for app in acct['created-apps']:
-        delete_app(client, app['id'], addr, pk)
-
-
+    for app in acct["created-apps"]:
+        delete_app(client, app["id"], addr, pk)
