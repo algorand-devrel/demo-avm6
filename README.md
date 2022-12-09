@@ -1,4 +1,4 @@
-Demo for AVM 1.1 features
+Demo for AVM 6 features
 -------------------------
 
 
